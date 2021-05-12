@@ -3,5 +3,4 @@ void _tmain(){
     //Miau
     //fixed
     //Galinha
-    
 }

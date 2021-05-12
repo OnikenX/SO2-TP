@@ -4,17 +4,21 @@
 #include <fcntl.h>
 #include <io.h>
 #include <windows.h>
+#include "utils.h"
 
 
-void _tmain(){
+int _tmain(){
     
-HANDLE ControlRunning = CreateMutex (0, 0,  (LPCWSTR)"Controlador_42");
+auto ControlRunning = Wrappers::Handle<HANDLE>(CreateMutex(0, 0,  MUnique));
 
+//verifica se 
 if(GetLastError() == ERROR_SUCCESS){
-    CloseHandle(ControlRunning);
-    return;
+    _tprintf(t("Control não iniciado."));
+    return 1;
 }
 
+
+
     //WaitForSingleObject(hSemaforo, INFINITE);
-    
+return 0;    
 }
