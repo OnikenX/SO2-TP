@@ -354,3 +354,5 @@ out
 
 .vscode/
 .vs/
+
+CMakeCache.txt
