@@ -13,7 +13,7 @@ std::optional<Wrappers::Handle<HANDLE>> verifica_se_o_control_ja_existe()
     if (GetLastError() == ERROR_ALREADY_EXISTS)
     {
         tcerr << t("Control já existe.") << std::endl;
-        return std::optional();
+        return std::optional(lll);
     }
     return std::optional(std::move(Unique));
 }
