@@ -17,7 +17,7 @@ std::optional<HANDLE> Control::verifica_se_o_control_ja_existe()
 	//criar mutex para os produtores
     HANDLE hMutex = CreateMutex(NULL, FALSE, TEXT("Mutex_Para_Control"));
 
-    if (dados.hSemEscrita == NULL || dados.hSemLeitura == NULL || dados.hMutex == NULL) {
+    if (semaforo_writes == NULL || semaforo_reads == NULL || hMutex == NULL) {
         _tprintf(TEXT("Erro no CreateSemaphore ou no CreateMutex\n"));
         return std::nullopt;
     }

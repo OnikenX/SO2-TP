@@ -121,4 +121,47 @@ namespace Wrappers
 	};
 };
 
+//erros comuns
 
+#define ERRO_ARGUMENTOS 1
+#define ERRO_CONTROL_EXISTE 2
+#define ERRO_CONTROL_NAO_EXISTE 3
+#define ERRO_AVIAO_
+
+
+struct Cords
+{
+	int x;
+    int y;
+};
+
+struct aviao
+{
+    int IDAv;
+    int CapMax;
+    int velocidade;
+	Cords PosA;
+    Cords PosDest;
+};
+
+struct Aeroporto{
+    Cords pos;
+    int IDAero;
+};
+
+struct Dados{
+	int nAvioes;
+	int MaxAv;
+	aviao av;
+
+
+};
+
+struct DadosThreads{
+    Dados* memPar; //ponteiro para a memoria partilhada
+    HANDLE hSemEscrita; //handle para o semaforo que controla as escritas (controla quantas posicoes estao vazias)
+    HANDLE hSemLeitura; //handle para o semaforo que controla as leituras (controla quantas posicoes estao preenchidas)
+    HANDLE hMutex;
+    int terminar; // 1 para sair, 0 em caso contr�rio
+    int id;
+};
