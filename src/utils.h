@@ -16,7 +16,6 @@
 #include <io.h>
 #include <fcntl.h>
 
-
 //typedef for tchar to std types
 #ifdef UNICODE
 #define tcout std::wcout
