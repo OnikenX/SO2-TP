@@ -31,7 +31,7 @@ typedef struct {
     HANDLE hSemEscrita; //handle para o semaforo que controla as escritas (controla quantas posicoes estao vazias)
     HANDLE hSemLeitura; //handle para o semaforo que controla as leituras (controla quantas posicoes estao preenchidas)
     HANDLE hMutex;
-    int terminar; // 1 para sair, 0 em caso contrùrio
+    int terminar; // 1 para sair, 0 em caso contrÔøΩrio
     int id;
 }DadosThreads;
 
@@ -56,7 +56,7 @@ DWORD WINAPI ThreadProdutor(LPVOID param) {
         //esperamos que o mutex esteja livre
         WaitForSingleObject(dados->hMutex, INFINITE);
 
-        //vamos copiar a variavel cel para a memoria partilhada (para a posiùùo de escrita)
+        //vamos copiar a variavel cel para a memoria partilhada (para a posiÔøΩÔøΩo de escrita)
         CopyMemory(&dados->memPar->buffer[dados->memPar->posE], &cel, sizeof(CelulaBuffer));
         dados->memPar->posE++; //incrementamos a posicao de escrita para o proximo produtor escrever na posicao seguinte
 
@@ -100,7 +100,7 @@ int _tmain(int argc, TCHAR* argv[])
     dados.hSemEscrita = CreateSemaphore(NULL, TAM_BUFFER, TAM_BUFFER, TEXT("SO2_SEMAFORO_ESCRITA"));
 
     //criar semaforo que conta as leituras
-    //0 porque nao ha nada para ser lido e depois podemos ir atù um maximo de 10 posicoes para serem lidas
+    //0 porque nao ha nada para ser lido e depois podemos ir at√© um maximo de 10 posi√ß√µes para serem lidas
     dados.hSemLeitura = CreateSemaphore(NULL, 0, TAM_BUFFER, TEXT("SO2_SEMAFORO_LEITURA"));
 
     //criar mutex para os produtores
@@ -133,7 +133,7 @@ int _tmain(int argc, TCHAR* argv[])
         }
     }
 
-    //mapeamos o bloco de memoria para o espaco de enderaùamento do nosso processo
+    //mapeamos o bloco de memoria para o espaco de enderaÔøΩamento do nosso processo
     dados.memPar = (BufferCircular*)MapViewOfFile(hFileMap, FILE_MAP_ALL_ACCESS, 0, 0, 0);
 
 
@@ -148,8 +148,7 @@ int _tmain(int argc, TCHAR* argv[])
         dados.memPar->posE = 0;
         dados.memPar->posL = 0;
     }
-
-
+    
     dados.terminar = 0;
 
     //temos de usar o mutex para aumentar o nProdutores para termos os ids corretos
@@ -171,7 +170,7 @@ int _tmain(int argc, TCHAR* argv[])
     }
 
     UnmapViewOfFile(dados.memPar);
-    //CloseHandles ... mas ù feito automaticamente quando o processo termina
+    //CloseHandles ... mas ÔøΩ feito automaticamente quando o processo termina
 
     return 0;
 

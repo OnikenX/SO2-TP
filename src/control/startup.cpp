@@ -46,5 +46,6 @@ std::optional<Control> Control::create(unsigned char MAX_AVIOES)
 	{
 		return std::nullopt;
 	}
+	return std::optional(Control(MAX_AVIOES, flag_do_control.value()));
 }
 
