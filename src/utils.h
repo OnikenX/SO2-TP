@@ -148,12 +148,19 @@ struct Aeroporto{
     int IDAero;
 };
 
+struct shared_memory_map
+{
+	bool se_pode_criar_mais_avioes;
+	//buffer circular das mensagens que vao do aviao para o control
+	Mensagens_Aviao_Control[100] mensagens_aviao_controler;
+	//buffer circular das mensagens que vao do control para o aviao
+	Mensagens_Control_Aviao[100] mensagens_controler_aviao;
+}
+
 struct Dados{
 	int nAvioes;
 	int MaxAv;
-	aviao av;
-
-
+	Aviao av;
 };
 
 struct DadosThreads{

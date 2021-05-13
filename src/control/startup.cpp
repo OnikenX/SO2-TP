@@ -4,18 +4,20 @@
 Control::Control(unsigned char max_avioes, HANDLE mutex_unico) : MAX_AVIOES(max_avioes), mutex_unico(mutex_unico)
 {
 	setup_do_registry();
+	aceita_avioes = true;
 }
 
-std::optional<HANDLE> Control::verifica_se_o_control_ja_existe()
+std::optional<HANDLE>
+Control::get_map_file_handle()
 {
 	//cria se um file maping
 	HANDLE hMapFile = CreateFileMapping(
-		INVALID_HANDLE_VALUE, // use paging file
-		NULL,				  // default security
-		PAGE_READWRITE,		  // read/write access
-		0,					  // maximum object size (high-order DWORD)
-		BUF_SIZE,			  // maximum object size (low-order DWORD)
-		szName);			  // name of mapping object
+		INVALID_HANDLE_VALUE,
+		NULL,
+		PAGE_READWRITE,
+		0,
+		sizeof(shared_memory_map),
+		szName);
 	if (hMapFile == NULL)
 	{
 		DWORD getlasterror = GetLastError();
@@ -41,13 +43,13 @@ int Control::setup_do_registry()
 
 	if (RegCreateKeyEx(HKEY_CURRENT_USER, chave_nome, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &chave, &resultado) != ERROR_SUCCESS)
 	{
-		tcerr << t("Erro a criar Chave ); \n") << std::endl;
+		tcerr << t("Erro a criar Chave") << std::endl;
 		return 1;
 	}
 
 	if (RegSetValueEx(chave, par_nome, 0, REG_SZ, &this->MAX_AVIOES, sizeof(this->MAX_AVIOES)) != ERROR_SUCCESS)
 	{
-		tcerr << t("Erro a aceder a Chave\n") << std::endl;
+		tcerr << t("Erro a aceder a Chave") << std::endl;
 	}
 }
 
