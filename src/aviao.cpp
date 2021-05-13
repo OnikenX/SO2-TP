@@ -14,10 +14,13 @@ int _tmain(int argc, TCHAR *argv[]){
         return ERRO_ARGUMENTOS;
     }
 
+
     aviao a;
     a.CapMax = (int)argv[1];
     a.velocidade = (int)argv[2];
     a.IDAv = (int)argv[3];
+
+//mandar para o control, por os IDs certos
 
     
 auto ControlRunning = Wrappers::Handle<HANDLE>(CreateMutex(0, 0,  MUnique));
@@ -25,8 +28,10 @@ auto ControlRunning = Wrappers::Handle<HANDLE>(CreateMutex(0, 0,  MUnique));
 //verifica se 
 if(GetLastError() == ERROR_SUCCESS){
     _tprintf(t("Control não iniciado."));
-    return 1;
+    return ERRO_CONTROL_NAO_EXISTE;
 }
+
+
 TCHAR* fileViewMap;
 HANDLE hFileMap;
  hFileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 100 * sizeof(TCHAR), TEXT("SO2_MEMORIA_PARTILHADA"));

@@ -134,7 +134,7 @@ struct Cords
     int y;
 };
 
-struct aviao
+struct Aviao
 {
     int IDAv;
     int CapMax;

@@ -1,8 +1,6 @@
 #include "control.hpp"
 //funções do control que servem de inicialização
 
-
-
 Control::Control(unsigned char max_avioes, HANDLE mutex_unico) : MAX_AVIOES(max_avioes), mutex_unico(mutex_unico)
 {
 	setup_do_registry();
@@ -10,26 +8,28 @@ Control::Control(unsigned char max_avioes, HANDLE mutex_unico) : MAX_AVIOES(max_
 
 std::optional<HANDLE> Control::verifica_se_o_control_ja_existe()
 {
-	// HANDLE Unique = CreateMutex(0, 0, MUnique);
-	HANDLE semaforo_reads = CreateSemaphore(NULL, max_avioes, max_avioes, TEXT("Semaforo_Para_Ler"));
-	HANDLE semaforo_writes =  CreateSemaphore(NULL, 0, max_avioes, TEXT("Semaforo_Para_Escrever"));
-
-	//criar mutex para os produtores
-    HANDLE hMutex = CreateMutex(NULL, FALSE, TEXT("Mutex_Para_Control"));
-
-    if (semaforo_writes == NULL || semaforo_reads == NULL || hMutex == NULL) {
-        _tprintf(TEXT("Erro no CreateSemaphore ou no CreateMutex\n"));
-        return std::nullopt;
-    }
-	
-	HANDLE memoria_partilhada = 
-	if (Unique == NULL)
-		if (GetLastError() == ERROR_ALREADY_EXISTS)
+	//cria se um file maping
+	HANDLE hMapFile = CreateFileMapping(
+		INVALID_HANDLE_VALUE, // use paging file
+		NULL,				  // default security
+		PAGE_READWRITE,		  // read/write access
+		0,					  // maximum object size (high-order DWORD)
+		BUF_SIZE,			  // maximum object size (low-order DWORD)
+		szName);			  // name of mapping object
+	if (hMapFile == NULL)
+	{
+		DWORD getlasterror = GetLastError();
+		if (getlasterror == ERROR_ALREADY_EXISTS)
 		{
-			tcerr << t("Control já existe.") << std::endl;
-			return std::nullopt;
+			tcout << t("O Control já existe.") << std::endl;
 		}
-	return std::optional(Unique);
+		else
+		{
+			tcout << t("Não foi possivel criar o file mapping por uma razão disconhecida: ") << getlasterror << std::endl;
+		}
+		return std::nullopt;
+	};
+	return std::optional(hMapFile);
 }
 
 int Control::setup_do_registry()
@@ -60,4 +60,3 @@ std::optional<Control> Control::create(unsigned char MAX_AVIOES)
 	}
 	return std::optional(Control(MAX_AVIOES, flag_do_control.value()));
 }
-
