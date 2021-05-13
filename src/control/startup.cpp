@@ -1,8 +1,14 @@
 #include "control.hpp"
+//funções do control que servem de inicialização
 
-Vars::Vars() : MAX_AVIOES(10) {}
 
-std::optional<HANDLE> verifica_se_o_control_ja_existe()
+
+Control::Control(unsigned char max_avioes, HANDLE mutex_unico) : MAX_AVIOES(max_avioes), mutex_unico(mutex_unico)
+{
+	setup_do_registry();
+}
+
+std::optional<HANDLE> Control::verifica_se_o_control_ja_existe()
 {
 	HANDLE Unique = CreateMutex(0, 0, MUnique);
 	if (Unique == NULL)
@@ -14,7 +20,7 @@ std::optional<HANDLE> verifica_se_o_control_ja_existe()
 	return std::optional(Unique);
 }
 
-int setup_do_registry(Vars &variaveis_globais)
+int Control::setup_do_registry()
 {
 	HKEY chave;
 	DWORD resultado;
@@ -27,8 +33,18 @@ int setup_do_registry(Vars &variaveis_globais)
 		return 1;
 	}
 
-	if (RegSetValueEx(chave, par_nome, 0, REG_SZ, &variaveis_globais.MAX_AVIOES, sizeof(variaveis_globais.MAX_AVIOES)) != ERROR_SUCCESS)
+	if (RegSetValueEx(chave, par_nome, 0, REG_SZ, &this->MAX_AVIOES, sizeof(this->MAX_AVIOES)) != ERROR_SUCCESS)
 	{
 		tcerr << t("Erro a aceder a Chave\n") << std::endl;
 	}
 }
+
+std::optional<Control> Control::create(unsigned char MAX_AVIOES)
+{
+	auto flag_do_control = verifica_se_o_control_ja_existe();
+	if (!flag_do_control.has_value())
+	{
+		return std::nullopt;
+	}
+}
+
