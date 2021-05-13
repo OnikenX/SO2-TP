@@ -10,7 +10,19 @@ Control::Control(unsigned char max_avioes, HANDLE mutex_unico) : MAX_AVIOES(max_
 
 std::optional<HANDLE> Control::verifica_se_o_control_ja_existe()
 {
-	HANDLE Unique = CreateMutex(0, 0, MUnique);
+	// HANDLE Unique = CreateMutex(0, 0, MUnique);
+	HANDLE semaforo_reads = CreateSemaphore(NULL, max_avioes, max_avioes, TEXT("Semaforo_Para_Ler"));
+	HANDLE semaforo_writes =  CreateSemaphore(NULL, 0, max_avioes, TEXT("Semaforo_Para_Escrever"));
+
+	//criar mutex para os produtores
+    HANDLE hMutex = CreateMutex(NULL, FALSE, TEXT("Mutex_Para_Control"));
+
+    if (dados.hSemEscrita == NULL || dados.hSemLeitura == NULL || dados.hMutex == NULL) {
+        _tprintf(TEXT("Erro no CreateSemaphore ou no CreateMutex\n"));
+        return std::nullopt;
+    }
+	
+	HANDLE memoria_partilhada = 
 	if (Unique == NULL)
 		if (GetLastError() == ERROR_ALREADY_EXISTS)
 		{
