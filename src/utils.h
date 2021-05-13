@@ -156,7 +156,7 @@ struct shared_memory_map
 	//buffer circular das mensagens que vao do control para o aviao
 	Mensagens_Control_Aviao[100] mensagens_controler_aviao;
 }
-
+z
 struct Dados{
 	int nAvioes;
 	int MaxAv;
