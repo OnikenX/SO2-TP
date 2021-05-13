@@ -21,12 +21,13 @@ private:
 	Dados d;
 	std::vector<Aeroporto> aeroportos;
 	std::vector<Aviao> avioes;
+	bool aceita_avioes;
 	
 	char Mapa[1000][1000];
 
 	// verfica se o control já existe,
 	// se não existir returna o handle para o mutex deste
-	static std::optional<HANDLE> verifica_se_o_control_ja_existe();
+	static std::optional<HANDLE> get_map_file_handle();
 
 	friend class Menu;
 };
