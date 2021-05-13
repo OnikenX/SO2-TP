@@ -1,30 +1,27 @@
 #include "control.hpp"
 
+int Control::run()
+{
+	return 0;
+}
+
 int main()
 {
-	Vars variaveis_globais;
-	auto flag_do_control = verifica_se_o_control_ja_existe();
-	if (!flag_do_control.has_value())
+
+#ifdef UNICODE
+	_setmode(_fileno(stdin), _O_WTEXT);
+	_setmode(_fileno(stdout), _O_WTEXT);
+#endif
+
+	auto control_create = Control::create();
+	if (!control_create.has_value())
+		tcout << t("Control não pode ser criado.") << std::endl;
+	Control control = std::move(control_create.value());
+
+	int return_control = control.run();
+	if (return_control != 0)
 	{
-		return 1;
+		tcout << t("Erro ") << return_control << t(" a correr o control.") << std::endl;
 	}
-
-	setup_do_registry(variaveis_globais);
-
-	//salva guarda que handle é fechado caso o programa é fechado em alguma altura
-	auto mutex_unique = Wrappers::Handle<HANDLE>(flag_do_control.value());
-
-	auto hSemaforo = Wrappers::Handle<HANDLE>{CreateSemaphore(NULL, variaveis_globais.MAX_AVIOES, variaveis_globais.MAX_AVIOES, TEXT("SO2_SEMAFORO"))};
-	if (hSemaforo() == NULL)
-	{
-		tcerr << t("Erro no CreateSemaphore\n") << std::endl;
-		return -1;
-	}
-
-	auto hFileMap = Wrappers::Handle<HANDLE>{CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 100 * sizeof(TCHAR), TEXT("SO2_MEMORIA_PARTILHADA"))};
-	if (hFileMap() == NULL)
-	{
-		tcerr << t("Erro no CreateFileMapping\n") << std::endl;
-		return -1;
-	}
+	return return_control;
 }

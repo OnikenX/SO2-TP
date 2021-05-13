@@ -1,18 +1,25 @@
 #pragma once
 
-#include <tchar.h>
-#include <math.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <io.h>
-#include <windows.h>
 #include "./../utils.h"
 
-struct Vars
+class Control
 {
-	unsigned char MAX_AVIOES;
-	Vars();
-};
+public:
+	const unsigned char MAX_AVIOES;
 
-std::optional<HANDLE> verifica_se_o_control_ja_existe();
-int setup_do_registry(Vars &variaveis_globais);
+	// caso exista problemas a criar o control o optional não ira retornar um control
+	static std::optional<Control> create(unsigned char MAX_AVIOES = 10);
+
+	// main function do control
+	int run();
+
+private:
+	Control(unsigned char max_avioes, HANDLE mutex_unico);
+	// startup functions
+	int setup_do_registry();
+	Wrappers::Handle<HANDLE> mutex_unico;
+
+	// verfica se o control já existe,
+	// se não existir returna o handle para o mutex deste
+	static std::optional<HANDLE> verifica_se_o_control_ja_existe();
+};

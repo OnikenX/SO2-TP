@@ -1,13 +1,23 @@
 
 #pragma once
-#include <windows.h>
+
+//standard c++
 #include <memory>
-#include <tchar.h>
 #include <sstream>
 #include <iostream>
 #include <sstream>
 #include <optional>//RUST Team
 
+//windows and tchar
+#include <windows.h>
+#include <tchar.h>
+
+//set mode for the terminal
+#include <io.h>
+#include <fcntl.h>
+
+
+//typedef for tchar to std types
 #ifdef UNICODE
 #define tcout std::wcout
 #define tcerr std::wcerr
@@ -111,13 +121,4 @@ namespace Wrappers
 	};
 };
 
-// corre isto no inicio do programa
-void init_tsets()
-{
-//inputs e outputs em unicode se preciso
-#ifdef UNICODE
-	_setmode(_fileno(stdin), _O_WTEXT);
-	_setmode(_fileno(stdout), _O_WTEXT);
-#endif
-}
 

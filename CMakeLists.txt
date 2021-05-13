@@ -19,3 +19,6 @@ add_executable(SO2-TP-control
 add_executable(SO2-TP-aviao src/aviao.cpp)
 
 add_executable(SO2-TP-passag src/passag.cpp)
+
+add_executable(exemplo_consumer_producer src/exemplo_consumer_producer.c)
+add_executable(exemplo1_consumer src/exemplo1_consumer.c)
