@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <io.h>
-#include <windows.h>
+#include <Windows.h>
 #include "utils.h"
 
 

@@ -31,102 +31,19 @@
 #define tstringstream std::stringstream
 #endif
 
+//defines
+
 // shortener for the TEXT macro
 #define t(quote) TEXT(quote)
-#define MUnique t("Controlador_42")
-
-namespace Wrappers
-{
-	//only usable with HKEY and HANDLE
-	template <typename H>
-	class Handle;
-
-	template <>
-	class Handle<HKEY>
-	{
-		HKEY h{};
-
-	public:
-		Handle() {}
-
-		~Handle()
-		{
-			RegCloseKey(h);
-			//_tprintf(TEXT("Closed Key"));
-		}
-		HKEY &operator()()
-		{
-			return h;
-		}
-
-		HKEY copy()
-		{
-			return h;
-		}
-	};
-
-	template <>
-	class Handle<HANDLE>
-	{
-		HANDLE h;
-
-	public:
-		Handle(HANDLE h) : h(h) {}
-		// Handle() {}
-
-		~Handle()
-		{
-#ifdef _DEBUG
-			tcerr << t("Closing the handle") << h << std::endl;
-#endif
-			CloseHandle(h);
-			//_tprintf(TEXT("Closed handle"));
-		}
-		HANDLE copy()
-		{
-			return h;
-		}
-		HANDLE &operator()()
-		{
-			return h;
-		}
-	};
-	template <>
-	class Handle<HMODULE>
-	{
-		HMODULE h{};
-
-	public:
-		Handle() {}
-		/*this overload = (HMODULE s){
-			h = s;
-		}*/
-		~Handle()
-		{
-#ifdef _DEBUG
-			tcerr << t("Closing the handle") << h << std::endl;
-#endif
-			FreeLibrary(h);
-			//_tprintf(TEXT("Closed handle"));
-		}
-		HMODULE copy()
-		{
-			return h;
-		}
-		HMODULE &operator()()
-		{
-			return h;
-		}
-	};
-};
-
+//shared memory name
+#define SHARED_MEMORY_NAME t("Global\\SO2_TP_SHARED_MEMORY")
 //erros comuns
 
 #define ERRO_ARGUMENTOS 1
 #define ERRO_CONTROL_EXISTE 2
 #define ERRO_CONTROL_NAO_EXISTE 3
-#define ERRO_AVIAO_
 
+//structs partilhadas
 
 struct Cords
 {
@@ -148,23 +65,27 @@ struct Aeroporto{
     int IDAero;
 };
 
+class Mensagem_Aviao_Control{
+
+};
+
+class Mensagem_Control_Aviao{
+
+};
+
 struct shared_memory_map
 {
 	bool se_pode_criar_mais_avioes;
 	//buffer circular das mensagens que vao do aviao para o control
-	Mensagens_Aviao_Control[100] mensagens_aviao_controler;
+	Mensagem_Aviao_Control mensagens_aviao_controler[100];
 	//buffer circular das mensagens que vao do control para o aviao
-	Mensagens_Control_Aviao[100] mensagens_controler_aviao;
-}
-z
-struct Dados{
-	int nAvioes;
-	int MaxAv;
-	Aviao av;
+	Mensagem_Control_Aviao mensagens_controler_aviao[100];
 };
 
+
+
 struct DadosThreads{
-    Dados* memPar; //ponteiro para a memoria partilhada
+    shared_memory_map* memPar; //ponteiro para a memoria partilhada
     HANDLE hSemEscrita; //handle para o semaforo que controla as escritas (controla quantas posicoes estao vazias)
     HANDLE hSemLeitura; //handle para o semaforo que controla as leituras (controla quantas posicoes estao preenchidas)
     HANDLE hMutex;
