@@ -70,10 +70,11 @@ void Menu::cria_aeroporto(){
 
 void Menu::consulta_aeroporto(){
     for(int i=0;i<counter_aeroporto;i++){
-        tcout << t("#############################################################################") << std::endl;
+        tcout << t("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@") << std::endl;
         tcout << t("Aeroporto nr ") << this->control.aeroportos[i].IDAero << std::endl;
         tcout << t("X-> ") << this->control.aeroportos[i].pos.x << t("Y-> ") << this->control.aeroportos[i].pos.y << std::endl;
     }
+    tcout << t("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@") << std::endl;
 }
 
 void Menu::consultar_aviao(){
@@ -87,6 +88,7 @@ void Menu::consultar_aviao(){
         tcout << t("Capacidade Maxima: ") << this->control.avioes[i].CapMax << std::endl;
         tcout << t("Velocidade: ") << this->control.avioes[i].velocidade << std::endl;
     }
+    tcout << t("#############################################################################") << std::endl;
 }
 
 void Menu::desativa_novos_avioes(){

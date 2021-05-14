@@ -99,3 +99,8 @@ std::optional<Control> Control::create(DWORD max_avioes, DWORD max_aeroportos) {
 
     return std::optional(Control(max_avioes, max_aeroportos, hMapFile, pBuf));
 }
+
+void Control::notifica_tudo() {
+    //correr arrays de avioes e mandar msg para morrerem
+    tcout << t("Isto é o Big Crunch deste universo, foi um prazer poder viajar consigo") << std::endl;
+}
