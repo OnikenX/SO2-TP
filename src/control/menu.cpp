@@ -69,6 +69,10 @@ void Menu::run() {
 }
 
 void Menu::cria_aeroporto() {
+    if(this->control.MAX_AEROPORTOS<=this->counter_aeroporto){
+        tcout << t("Já foi atingido o limite de Aeroportos possiveis") << std::endl;
+        return;
+    }
     Aeroporto a;
     tcout << t("Insira as Coordenadas do novo Aeroporto:") << std::endl;
     bool aeroporto_near;
