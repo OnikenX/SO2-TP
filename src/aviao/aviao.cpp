@@ -23,7 +23,7 @@ int _tmain(int argc, TCHAR *argv[]){
 //mandar para o control, por os IDs certos
 
     
-auto ControlRunning = Wrappers::Handle<HANDLE>(CreateMutex(0, 0,  MUnique));
+auto ControlRunning = Wrappers::Handle<HANDLE>(CreateMutex(0, 0,  SHARED_MEMORY_NAME));
  
 //verifica se 
 if(GetLastError() == ERROR_SUCCESS){
