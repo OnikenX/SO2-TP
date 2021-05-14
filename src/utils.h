@@ -36,7 +36,7 @@
 // shortener for the TEXT macro
 #define t(quote) TEXT(quote)
 //shared memory name
-#define SHARED_MEMORY_NAME t("Global\\SO2_TP_SHARED_MEMORY")
+#define SHARED_MEMORY_NAME t("SO2_TP_SHARED_MEMORY")
 //erros comuns
 
 #define ERRO_ARGUMENTOS 1
@@ -73,14 +73,14 @@ class Mensagem_Control_Aviao{
 
 };
 
-struct shared_memory_map
+typedef struct
 {
 	bool se_pode_criar_mais_avioes;
 	//buffer circular das mensagens que vao do aviao para o control
 	Mensagem_Aviao_Control mensagens_aviao_controler[100];
 	//buffer circular das mensagens que vao do control para o aviao
 	Mensagem_Control_Aviao mensagens_controler_aviao[100];
-};
+}shared_memory_map;
 
 
 

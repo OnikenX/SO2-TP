@@ -24,7 +24,7 @@ bool registry_get_key(TCHAR par_nome[], DWORD &key_value) {
                                     &resultado,
                                     &cbData
     );
-    if (return_value == ERROR_SUCCESS && cbData == sizeof(DWORD)){
+    if (return_value == ERROR_SUCCESS && cbData == sizeof(DWORD)) {
         key_value = resultado;
         return true;
     }
@@ -52,21 +52,21 @@ bool cria_chaves(DWORD &max_avioes, DWORD &max_aeroportos) {
     return return_value;
 }
 
-
 //se conseguir ler as chaves ou criar returna true se não returna false
 bool Control::setup_do_registry(DWORD &max_avioes, DWORD &max_aeroportos) {
-    if (registry_get_key(const_cast<TCHAR *>(par_nome_max_avioes), max_avioes))
-        if (registry_get_key(const_cast<TCHAR *>(par_nome_max_aeroportos), max_aeroportos))
+    if (registry_get_key((TCHAR*)par_nome_max_avioes, max_avioes))
+        if (registry_get_key((TCHAR *)par_nome_max_aeroportos, max_aeroportos))
             return true;
     return cria_chaves(max_avioes, max_aeroportos);
 }
 
 
-std::optional<Control> Control::create(DWORD max_avioes, DWORD max_aeroportos) {
+std::optional<std::unique_ptr<Control>> Control::create(DWORD max_avioes, DWORD max_aeroportos) {
 
     //cria se um file maping
     HANDLE hMapFile =
-            CreateFileMapping(INVALID_HANDLE_VALUE,NULL,PAGE_READWRITE,0,sizeof(shared_memory_map),SHARED_MEMORY_NAME);
+            CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(shared_memory_map),
+                              SHARED_MEMORY_NAME);
 
     if (hMapFile == NULL) {
         DWORD getlasterror = GetLastError();
@@ -97,7 +97,9 @@ std::optional<Control> Control::create(DWORD max_avioes, DWORD max_aeroportos) {
         return std::nullopt;
     }
 
-    return std::optional(Control(max_avioes, max_aeroportos, hMapFile, pBuf));
+    // a razão para usar o unique pointer é para que o compilar n esteja a chamar o contrutor ou o descontrutor desnecessariamente
+    // com um unique pointer certificamo nos que n existem copias descessarias do Control ou referencias para ele
+    return std::optional(std::make_unique<Control>(max_avioes, max_aeroportos, hMapFile, pBuf));
 }
 
 void Control::notifica_tudo() {

@@ -15,7 +15,6 @@ set(control_core src/control/control.cpp
         src/control/startup.cpp)
 
 set(control_menu src/control/menu.cpp)
-set(control_full ${control_menu} ${control_core})
 
 add_executable(SO2-TP-control src/control/main.cpp
         ${control_core})
@@ -29,5 +28,4 @@ add_executable(exemplo_producer src/exemplo_producer.c)
 add_executable(exemplo_registry src/exemplo_registry.c)
 
 #tests
-add_executable(test src/test.cpp
-        ${control_core})
+add_executable(test src/test.cpp)
