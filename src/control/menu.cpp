@@ -37,7 +37,7 @@ void Menu::run() {
                 tcin >> input;
             } while (input <= 0);
         } catch (std::exception e) {
-            std::cout << e.what();
+            tcout << e.what();
             break;
         }
 //        op[_tcslen(op) - 1] = t('\0');
@@ -79,7 +79,19 @@ void Menu::cria_aeroporto() {
     bool aeroporto_near;
     do {
         aeroporto_near = false;
-        do{
+        do {
+            tcout << t("Nome do Aeroporto:");
+            tcout.flush();
+            tcin >> a.nome;
+            auto existe = std::find_if(std::begin(this->control.aeroportos), std::end(this->control.aeroportos),
+                                       [&](Aeroporto tmp) { return !_tcscmp(tmp.nome, a.nome); });
+            if (existe != std::end(this->control.aeroportos)) {
+                tcout << t("Tens de ser mais original, esse nome ja foi patentiado:");
+            } else {
+                break;
+            }
+        } while (true);
+        do {
             tcout << t("X:");
             tcout.flush();
             tcin >> a.pos.x;
@@ -108,6 +120,7 @@ void Menu::consulta_aeroporto() {
     for (int i = 0; i < counter_aeroporto; i++) {
         tcout << t("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@") << std::endl;
         tcout << t("Aeroporto nr ") << this->control.aeroportos[i].IDAero << std::endl;
+        tcout << t("Aeroporto ") << this->control.aeroportos[i].nome << std::endl;
         tcout << t("X-> ") << this->control.aeroportos[i].pos.x << t("\tY-> ") << this->control.aeroportos[i].pos.y
               << std::endl;
     }
