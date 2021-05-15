@@ -416,7 +416,13 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="C:/Users/OnikenX/source/repos/SO2-TP/src/aviao/SO2_TP_DLL_2021.lib">
+			<Option target="SO2-TP-aviao"/>
+		</Unit>
 		<Unit filename="C:/Users/OnikenX/source/repos/SO2-TP/src/aviao/aviao.cpp">
+			<Option target="SO2-TP-aviao"/>
+		</Unit>
+		<Unit filename="C:/Users/OnikenX/source/repos/SO2-TP/src/aviao/aviao.hpp">
 			<Option target="SO2-TP-aviao"/>
 		</Unit>
 		<Unit filename="C:/Users/OnikenX/source/repos/SO2-TP/src/control/control.cpp">

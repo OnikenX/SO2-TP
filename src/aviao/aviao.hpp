@@ -3,9 +3,6 @@
 //
 #pragma once
 #include <utils.h>
+#include "SO2_TP_DLL_2021.h"
 
-struct aviao{
-    create();
-    Aviao(){}
 
-};

@@ -21,7 +21,7 @@ set(control_menu src/control/menu.cpp)
 add_executable(SO2-TP-control src/control/main.cpp
         ${control_core} ${control_menu})
 
-add_executable(SO2-TP-aviao src/aviao/aviao.cpp)
+add_executable(SO2-TP-aviao src/aviao/aviao.cpp #[[src/aviao/SO2_TP_DLL_2021.lib]])
 
 add_executable(SO2-TP-passag src/passag.cpp)
 
