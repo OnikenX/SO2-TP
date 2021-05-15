@@ -158,6 +158,7 @@ int _tmain(int argc, TCHAR* argv[])
     if (hThread != NULL) {
         _tprintf(TEXT("Escreva qualquer coisa para sair ...\n"));
         _getts_s(comando, 100);
+        
         dados.terminar = 1;
 
         //esperar que a thread termine

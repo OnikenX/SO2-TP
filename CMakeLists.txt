@@ -6,8 +6,13 @@ set(CMAKE_CXX_STANDARD 20)
 # activa o unicode para o TCHAR
 add_compile_definitions("UNICODE" "_UNICODE")
 # true unicode utf_8
-add_compile_definitions("UTF8_UNICODE")
-add_compile_definitions("_DEBUG")
+#add_compile_definitions("UTF8_UNICODE")
+# define especial para debugging
+if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    add_compile_definitions("_DEBUG")
+endif (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+
+
 # faz com que o msvc leia todos os source files como utf-8
 add_compile_options("/utf-8")
 
@@ -15,19 +20,17 @@ include_directories(src)
 
 set(control_core src/control/control.cpp
         src/control/startup.cpp)
-
 set(control_menu src/control/menu.cpp)
-
+set(utils src/utils.cpp)
 add_executable(SO2-TP-control src/control/main.cpp
-        ${control_core} ${control_menu})
+        ${control_core} ${control_menu} ${utils})
 
-add_executable(SO2-TP-aviao src/aviao/aviao.cpp #[[src/aviao/SO2_TP_DLL_2021.lib]])
+add_executable(SO2-TP-aviao src/aviao/aviao.cpp src/aviao/main.cpp src/aviao/startup.cpp ${utils})
 
 add_executable(SO2-TP-passag src/passag.cpp)
 
 add_executable(exemplo_consumer src/exemplo_consumer.c)
 add_executable(exemplo_producer src/exemplo_producer.c)
-add_executable(exemplo_registry src/exemplo_registry.c)
 
 #tests
 add_executable(test src/test.cpp)

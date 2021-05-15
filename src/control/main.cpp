@@ -13,7 +13,6 @@ int _tmain() {
         _setmode(_fileno(stderr), _O_WTEXT);
 #endif
 #endif
-
         auto control_create = Control::create();
         if (!control_create.has_value())
             tcout << t("Control não pode ser criado.") << std::endl;

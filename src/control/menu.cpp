@@ -1,4 +1,5 @@
 #include "menu.hpp"
+#include <algorithm>
 
 Menu::Menu(Control &control) : control(control), counter_avioes(0), counter_aeroporto(0) {}
 
@@ -27,7 +28,7 @@ void Menu::run() {
         tcout << t("> ");
         tcout.flush();
         int input = -1;
-        if(input == 0){
+        if (input == 0) {
             tcout << t("Por favor insira um numero positivo entre 1 a 6 > ");
             tcout.flush();
         }
@@ -69,40 +70,38 @@ void Menu::run() {
 }
 
 void Menu::cria_aeroporto() {
-    if(this->control.MAX_AEROPORTOS<=this->counter_aeroporto){
+    if (this->control.MAX_AEROPORTOS <= this->counter_aeroporto) {
         tcout << t("Já foi atingido o limite de Aeroportos possiveis") << std::endl;
         return;
     }
     Aeroporto a;
     tcout << t("Insira as Coordenadas do novo Aeroporto:") << std::endl;
     bool aeroporto_near;
-    do{
+    do {
         aeroporto_near = false;
         do{
             tcout << t("X:");
             tcout.flush();
             tcin >> a.pos.x;
-        }while(a.pos.x<0 || a.pos.x>999);
-        do{
+        } while (a.pos.x < 0 || a.pos.x > 999);
+        do {
             tcout << t("Y:");
             tcout.flush();
             tcin >> a.pos.y;
-        }while(a.pos.y<0 || a.pos.y>999);
-        for(auto & elem : this->control.aeroportos)
-        {
-            int tmpX = abs(elem.pos.x-a.pos.x);
-            int tmpY = abs(elem.pos.y-a.pos.y);
-            if(tmpX<10 && tmpY<10){
-                tcout << t("Já existe um aeroporto nas redondezas, não me parece boa ideia construir um aqui") << std::endl;
-                aeroporto_near= true;
+        } while (a.pos.y < 0 || a.pos.y > 999);
+        for (auto &elem : this->control.aeroportos) {
+            int tmpX = abs(elem.pos.x - a.pos.x);
+            int tmpY = abs(elem.pos.y - a.pos.y);
+            if (tmpX < 10 && tmpY < 10) {
+                tcout << t("Já existe um aeroporto nas redondezas, não me parece boa ideia construir um aqui")
+                      << std::endl;
+                aeroporto_near = true;
             }
         }
-
-
-    }while(aeroporto_near==true);
+    } while (aeroporto_near);
 
     a.IDAero = this->counter_aeroporto++;
-    this->control.aeroportos.insert(this->control.aeroportos.end(),a);
+    this->control.aeroportos.insert(this->control.aeroportos.end(), a);
 }
 
 void Menu::consulta_aeroporto() {

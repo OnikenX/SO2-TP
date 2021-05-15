@@ -7,6 +7,9 @@ class Menu
 public:
     Menu(Control &control);
     void run();
+
+    Menu(const Menu &) = delete; // non construction-copyable
+    Menu &operator=(const Menu &) = delete; // non copyable
 private:
     int counter_avioes;
     int counter_aeroporto;
