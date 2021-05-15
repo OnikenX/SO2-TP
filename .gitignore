@@ -332,27 +332,36 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+
+#cmake related
 build/
 CMakeFiles/
+CMakeCache.txt
+cmake-build-release/
+cmake-build-debug/
+
+#visual studio project files
 SO2-TP-aviao.vcxproj
 SO2-TP-aviao.vcxproj.filters
 SO2-TP-control.vcxproj
 SO2-TP-control.vcxproj.filters
 SO2-TP-passag.vcxproj
 SO2-TP-passag.vcxproj.filters
-.gitignore
 ZERO_CHECK.vcxproj
 SO2-TP.sln
+test.vcxproj
+test.vcxproj.filters
 ZERO_CHECK.vcxproj.filters
 ALL_BUILD.vcxproj.filters
 ALL_BUILD.vcxproj
-
 SO2-TP-control.dir
 SO2-TP-passag.dir
 SO2-TP-aviao.dir
 out
 
+#vscode config
 .vscode/
-.vs/
 
-CMakeCache.txt
+
+
