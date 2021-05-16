@@ -59,13 +59,11 @@ Control::verificaAeroporto_e_insereAviaSeExistir(Mensagem_Control &mensagemContr
 }
 
 void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
-    Mensagem_Aviao mensagemAviao;
+    Mensagem_Aviao mensagemAviao{};
 
     //nao encontrou o aeroporto
     if (control.verificaAeroporto_e_insereAviaSeExistir(mensagemControl, NULL)) {
         mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_existe;
-
-
     } else {
         mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_nao_existe;
     }
@@ -74,7 +72,7 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
 }
 
 void novoDestino(Control &control, Mensagem_Control &mensagemControl) {
-    Mensagem_Aviao mensagemAviao;
+    Mensagem_Aviao mensagemAviao{};
 
     if (control.verificaAeroporto_e_insereAviaSeExistir(mensagemControl, &mensagemAviao)) {
         mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_existe;
