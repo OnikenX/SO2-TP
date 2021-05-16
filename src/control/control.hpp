@@ -18,6 +18,9 @@ struct Control {
     // main function do control
     int run();
 
+    //mata evento mandar todos dar um tiro nos cornos
+    HANDLE evento_JackTheReaper;
+
     Control( const Control& ) = delete; // non construction-copyable
     Control& operator=( const Control& ) = delete; // non copyable
 
@@ -29,13 +32,13 @@ struct Control {
     HANDLE shared_memory_handle;
     SharedMemoryMap_control* view_of_file_pointer;
 
-    void notifica_tudo();
+    void liberta_o_jack();
 
     Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
-            SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno);
+            SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno, HANDLE evento_JackTheReaper);
 
     std::vector<Aeroporto> aeroportos;
-    std::unordered_map<unsigned long,Aviao> avioes;
+    std::unordered_map<unsigned long,AviaoShared> avioes;
     bool aceita_avioes;
 
     void finalizar();

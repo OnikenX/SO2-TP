@@ -342,8 +342,8 @@ cmake-build-release/
 cmake-build-debug/
 
 #visual studio project files
-SO2-TP-aviao.vcxproj
-SO2-TP-aviao.vcxproj.filters
+SO2-TP-aviaoInstance.vcxproj
+SO2-TP-aviaoInstance.vcxproj.filters
 SO2-TP-control.vcxproj
 SO2-TP-control.vcxproj.filters
 SO2-TP-passag.vcxproj
@@ -357,7 +357,7 @@ ALL_BUILD.vcxproj.filters
 ALL_BUILD.vcxproj
 SO2-TP-control.dir
 SO2-TP-passag.dir
-SO2-TP-aviao.dir
+SO2-TP-aviaoInstance.dir
 out
 
 #vscode config

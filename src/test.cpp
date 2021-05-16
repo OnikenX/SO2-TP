@@ -3,24 +3,27 @@
 //
 #include <Windows.h>
 #include <utils.hpp>
-DWORD WINAPI ThreadName(LPVOID param){
-    for (int i=1;i< 10; ++i){
-        tcout << i << t(" thread 2 antes...") << std::endl;
-         WaitForSingleObject(SharedLocks::get()->mutex_partilhado, INFINITE);
-        Sleep(500);
-        tcout << i << t(" thread 2 depois ...") << std::endl;
-        ReleaseMutex(SharedLocks::get()->mutex_partilhado);
-    }
-return 1;
-}
-int _tmain() {
-    HANDLE thread = CreateThread(NULL, 0, ThreadName, NULL, 0, NULL);
-    for (int i=1;i< 10; ++i){
-        tcout << i << t(" thread 1 antes...") << std::endl;
-        auto guard1 = GuardLock(SharedLocks::get()->mutex_partilhado);
-        tcout << i << t(" thread 1 depois ...") << std::endl;
-    }
 
-    WaitForSingleObject(thread, INFINITE);
-    return 0;
+DWORD WINAPI ThreadName(LPVOID param) {
+    tcout << t("waiting ...") << std::endl;
+    HANDLE evento = CreateEvent(NULL, TRUE, FALSE, t("evento_test"));
+
+    WaitForSingleObject(evento, INFINITE);
+    tcout << t("waited!") << std::endl;
+    return 1;
+}
+
+int _tmain() {
+    SetLastError(ERROR_SUCCESS);
+    HANDLE evento = CreateEvent(NULL, TRUE, FALSE, t("evento_test"));
+    if (!evento) {
+        tcout << t("fudeu!");
+        return -1;
+    }
+    HANDLE processes[10];
+    for (int i = 0; i < 10; i++)
+        processes[i] = CreateThread(NULL, 0, ThreadName, NULL, 0, NULL);
+    Sleep(2000);
+    SetEvent(evento);
+    WaitForMultipleObjects(10,processes, true, INFINITE);
 }

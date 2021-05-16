@@ -78,7 +78,7 @@ struct Cords {
     int y;
 };
 
-struct Aviao {
+struct AviaoShare {
     unsigned long IDAv;
     int CapMax;
     int velocidade;
@@ -89,11 +89,11 @@ struct Aviao {
 struct Aeroporto {
     Cords pos;
     TCHAR nome[MAX_LENGTH_NAME_AEROPORTO];
-    int IDAero;
+    unsigned long IDAero;
 };
 /*
 struct Buffer_Circular{
-    Aviao av[10];
+    AviaoInstance av[10];
     int posE; //proxima posicao de escrita
     int posL; //proxima posicao de leitura
     int nProdutores;
@@ -109,18 +109,48 @@ struct Passa_Thread{
 };
 
 */
-enum MenuActionsToControl {
-    EncerrarSistema,
-    CriarAeroporto,
-    ToggleAceitarAvioes
+
+
+enum Mensagem_types{
+    confirmar_novo_aviao
 };
 
-struct Mensagem_Control {
-    MenuActionsToControl controlaction;
+
+struct Pedido_confirmar_novo_aviao{
+    unsigned long id_aeroporto;
 };
+
+
+//union dos possiveis dados a enviar
+union Mensagem_Control_union{
+    Pedido_confirmar_novo_aviao pedidoConfirmarNovoAviao;
+
+
+};
+
+
+//as mensagens que sao enviadas para o control pelo aviaoInstance
+struct Mensagem_Control {
+    Mensagem_types type;
+    unsigned long id_aviao;
+    Mensagem_Control_union mensagem;
+};
+
+
+union Mensagem_Aviao_union{
+
+};
+enum Mensagem_resposta{
+    ok,
+    aeroporto_nao_existe,
+    aviao_existe
+};
+
+
 
 struct Mensagem_Aviao {
-
+//    Mensagem_types type;
+    Mensagem_resposta resposta;
 };
 
 
@@ -130,7 +160,7 @@ struct SharedMemoryMap_control {
     //numero de avioes em execução
     int nAvioes;
     bool terminar;
-    //buffer circular das mensagens que vao do aviao para o control
+    //buffer circular das mensagens que vao do aviaoInstance para o control
     Mensagem_Control buffer_mensagens_control[CIRCULAR_BUFFERS_SIZE];
     int posReader, posWriter;
     SharedMemoryMap_control();

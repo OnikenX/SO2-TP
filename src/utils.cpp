@@ -93,3 +93,7 @@ GuardLock::GuardLock(GuardLock&& guard) {
 SharedMemoryMap_control::SharedMemoryMap_control() : se_pode_criar_mais_avioes(true), nAvioes(0), terminar(false),posReader(0), posWriter(0) {
     memset(buffer_mensagens_control, 0, sizeof(Mensagem_Control) * CIRCULAR_BUFFERS_SIZE);
 }
+
+bool Cords::isEqual(Cords &outro) {
+    return (this->x == outro.x && this->y == outro.y);
+}

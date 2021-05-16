@@ -22,6 +22,7 @@ void shared_memory_verification(HANDLE &hMapFile, SharedMemoryMap_control *&pBuf
         _tprintf(TEXT("Could not map view of file (%d).\n"),
                  GetLastError());
         CloseHandle(hMapFile);
+
     }
 }
 
@@ -41,7 +42,7 @@ HMODULE getdll() {
 }
 
 std::optional<std::unique_ptr<AviaoInstance>>
-AviaoInstance::create(int id_do_aeroporto, int velocidade, int cap_max) {
+AviaoInstance::create(AviaoInstance av) {
 
     if (!SharedLocks::get()){
         tcerr << t("Erro a criar mutex e semaforos partilhados.") << std::endl;
@@ -70,7 +71,7 @@ AviaoInstance::create(int id_do_aeroporto, int velocidade, int cap_max) {
 
 
 AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMemoryMap,
-                             void *dllHandle, TCHAR *nome_do_aeroporto, int velocidade, int cap_max)
+                             void *dllHandle, AviaoInstance av)
         : hMapFile(hMapFile), sharedMemoryMap(sharedMemoryMap), dllHandle(dllHandle),
           id_do_aeroporto(id_do_aeroporto), velocidade(velocidade), cap_max(cap_max) {
     ptr_move_func = GetProcAddress((HMODULE) dllHandle, "move");

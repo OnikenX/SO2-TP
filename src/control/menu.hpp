@@ -19,3 +19,14 @@ private:
     void mata_tudo();
     void desativa_novos_avioes();
 };
+
+
+struct AviaoSharedObjects_control {
+    AviaoSharedObjects_control(HANDLE mutex, HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
+                               Mensagem_Aviao *sharedMensagemAviao);
+    static std::unique_ptr<AviaoSharedObjects_control> AviaoSharedObjects_control::create(unsigned long id_aviao);
+
+    HANDLE mutex, semaforo_write, semaforo_read, filemap;
+    Mensagem_Aviao *sharedMensagemAviao;
+    ~AviaoSharedObjects_control();
+};

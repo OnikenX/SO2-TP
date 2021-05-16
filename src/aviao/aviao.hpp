@@ -11,26 +11,20 @@ struct AviaoInstance {
     HANDLE hMapFile;
     void *dllHandle;
     FARPROC ptr_move_func;
-    int id_do_aeroporto;
+    unsigned long id_do_aeroporto;
 
     bool verifica_criacao_com_control();
+    bool em_andamento;
+    AviaoShare aviao;
 
-    int velocidade;
-    int cap_max;
-    unsigned int id;
-
-    Semaforos( const SharedLocks& ) = delete; // non construction-copyable
-    SharedLocks& operator=(const SharedLocks& ) = delete; // non copyable
-
+    AviaoInstance(const AviaoInstance &) = delete; // non construction-copyable
+    AviaoInstance &operator=(const AviaoInstance &) = delete; // non copyable
     AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMemoryMap, void *dllHandle,
-                  int id_do_aeroporto, int velocidade, int cap_max);
-
+                  AviaoInstance aviao);
     static std::optional<std::unique_ptr<AviaoInstance>>
-    create(int id_do_aeroporto, int velocidade, int cap_max);
-
+    create(AviaoInstance aviao);
     int move(int cur_x, int cur_y, int final_dest_x, int final_dest_y, int *next_x, int *next_y);
-
+    int run();
     ~AviaoInstance();
 };
-
 

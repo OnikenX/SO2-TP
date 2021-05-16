@@ -15,10 +15,12 @@ void Menu::run() {
         tcout << t("**   2 - Consultar Aeroporto   **") << std::endl;
         tcout << t("**   3 - Consultar Avião       **") << std::endl;
         tcout << t("**   4 - Consultar Passageiros **") << std::endl;
+        WaitForSingleObject(control.mutex_interno, INFINITE);
         if (this->control.aceita_avioes)
             tcout << t("**   5 - No More Planes        **") << std::endl;
         else
             tcout << t("**   5 - More Planes Please    **") << std::endl;
+        ReleaseMutex(control.mutex_interno);
         tcout << t("**                             **") << std::endl;
         tcout << t("**   6 - Shutdown total        **") << std::endl;
         tcout << t("*********************************") << std::endl;
@@ -80,21 +82,23 @@ void Menu::cria_aeroporto() {
     Aeroporto a;
     tcout << t("Insira as Coordenadas do novo Aeroporto:") << std::endl;
     bool aeroporto_near;
+    bool exit_loop =false;
     do {
         aeroporto_near = false;
         do {
             tcout << t("Nome do Aeroporto:");
             tcout.flush();
             tcin >> a.nome;
-            auto guard = GuardLock(control.mutex_interno);
+            WaitForSingleObject(control.mutex_interno, INFINITE);
             auto existe = std::find_if(std::begin(this->control.aeroportos), std::end(this->control.aeroportos),
                                        [&](Aeroporto tmp) { return !_tcscmp(tmp.nome, a.nome); });
             if (existe != std::end(this->control.aeroportos)) {
                 tcout << t("Tens de ser mais original, esse nome ja foi patentiado:");
             } else {
-                break;
+                exit_loop = true;
             }
-        } while (true);
+            ReleaseMutex(control.mutex_interno);
+        } while (!exit_loop);
         do {
             tcout << t("X:");
             tcout.flush();

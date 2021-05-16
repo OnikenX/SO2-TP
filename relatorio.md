@@ -5,7 +5,7 @@ feito por:
 
 # Intregração com a dll
 A dll usada foi a para x64, ela é importada de forma explicita.
-Porfavor insira o dll que esta na pasta `SO2_TP_DLL` para onde compilar o executavel `SO2-TP-aviao.exe`.
+Porfavor insira o dll que esta na pasta `SO2_TP_DLL` para onde compilar o executavel `SO2-TP-aviaoInstance.exe`.
 
 
 
