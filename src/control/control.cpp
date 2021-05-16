@@ -1,43 +1,49 @@
 #include "control.hpp"
 #include "menu.hpp"
 
-enum ControlActions {
-    EncerrarSistema,
-    CriarAeroporto,
-    ToggleAceitarAvioes
-};
 
 DWORD WINAPI ThreadMenu(LPVOID param) {
     Menu &menu = *(Menu *) param;
     menu.run();
     return 1;
+
 }
 
-DWORD WINAPI ThreadBufferWrite(LPVOID param) {
+DWORD WINAPI ThreadReadBuffer(LPVOID param) {
+    Control &control = *(Control *) param;
+    Mensagem_Control mensagemControl;
+    SharedLocks& locks = *SharedLocks::get();
+    SharedMemoryMap_control& sharedMem = *control.view_of_file_pointer;
+    Mensagem_Control *msgBuffer = sharedMem.buffer_mensagens_control;
+    while (true) {
 
-    return 1;
-}
+        WaitForSingleObject(locks.semaforo_read_control_aviao, INFINITE);
+        WaitForSingleObject(locks.mutex_partilhado, INFINITE);
 
-DWORD WINAPI ThreadBufferRead(LPVOID param) {
+        CopyMemory(&mensagemControl, &msgBuffer[sharedMem.posReader], sizeof(Mensagem_Control));
+        sharedMem.posReader++;
+        if (sharedMem.posReader == CIRCULAR_BUFFERS_SIZE)
+            sharedMem.posReader = 0;
 
-    return 1;
-}
+        ReleaseMutex(locks.mutex_partilhado);
+        ReleaseSemaphore(locks.semaforo_read_control_aviao, 1, NULL);
 
-DWORD WINAPI ThreadUpdateMap(LPVOID param) {
-
+        mensagemControl.;
+        {
+            auto guard = GuardLock(control.mutex_interno);
+            if (control.terminar)
+                break;
+        }
+    }
     return 1;
 }
 
 int Control::run() {
-    //TODO: criar pipes para que o menu e control se comuniquem
-
     auto menu = std::make_unique<Menu>(*this);
     const int nthreads = 4;
     HANDLE threads[nthreads];
     threads[0] = CreateThread(NULL, 0, ThreadMenu, menu.get(), 0, NULL);
-    threads[1] = CreateThread(NULL, 0, ThreadBufferWrite, this, 0, NULL);
-    threads[2] = CreateThread(NULL, 0, ThreadBufferRead, this, 0, NULL);
-    threads[3] = CreateThread(NULL, 0, ThreadUpdateMap, this, 0, NULL);
+    threads[1] = CreateThread(NULL, 0, ThreadReadBuffer, this, 0, NULL);
     WaitForMultipleObjects(nthreads, threads, TRUE, INFINITE);
     return 0;
 }

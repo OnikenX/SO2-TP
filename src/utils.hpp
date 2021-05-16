@@ -40,24 +40,22 @@
 #define SEMAFORO_WRITE_CONTROL_AVIAO t("SO2_TP_SEMAFORO_WRITE_CONTROL_AVIAO")
 #define SEMAFORO_READ_AVIAO_CONTROL t("SO2_TP_SEMAFORO_READ_AVIAO_CONTROL")
 #define SEMAFORO_WRITE_AVIAO_CONTROL t("SO2_TP_SEMAFORO_WRITE_AVIAO_CONTROL")
-
-struct Semaforos {
+#define MUTEX_PARTILHADO t("SO2_TP_MUTEX_PARTINHADO_BUFFER")
+struct SharedLocks {
     HANDLE semaforo_read_control_aviao;
     HANDLE semaforo_write_control_aviao;
-    HANDLE semaforo_read_aviao_control;
-    HANDLE semaforo_write_aviao_control;
-
-    static Semaforos *create();
+    HANDLE mutex_partilhado;
+    static SharedLocks *get();
 
     //define se o singleton acabou de ser criado
     bool firsttime;
     bool erros;
 
-    Semaforos(const Semaforos &) = delete; // non construction-copyable
-    Semaforos &operator=(const Semaforos &) = delete; // non copyable
-    ~Semaforos();
+    SharedLocks(const SharedLocks &) = delete; // non construction-copyable
+    SharedLocks &operator=(const SharedLocks &) = delete; // non copyable
+    ~SharedLocks();
 
-    Semaforos();
+    SharedLocks();
 
 private:
     void closeall();
@@ -93,33 +91,70 @@ struct Aeroporto {
     TCHAR nome[MAX_LENGTH_NAME_AEROPORTO];
     int IDAero;
 };
-
-class Mensagem_Aviao_Control {
+/*
+struct Buffer_Circular{
+    Aviao av[10];
+    int posE; //proxima posicao de escrita
+    int posL; //proxima posicao de leitura
+    int nProdutores;
+    int nConsumidores;
 
 };
 
-class Mensagem_Control_Aviao {
+struct Passa_Thread{
+    Buffer_Circular* bc;
+    HANDLE hWrite;
+    HANDLE hRead;
+    int terminar;
+};
+
+*/
+enum MenuActionsToControl {
+    EncerrarSistema,
+    CriarAeroporto,
+    ToggleAceitarAvioes
+};
+
+struct Mensagem_Control {
+    MenuActionsToControl controlaction;
+};
+
+struct Mensagem_Aviao {
 
 };
 
 
-struct SharedMemoryMap {
+//memoria partinha do control
+struct SharedMemoryMap_control {
     bool se_pode_criar_mais_avioes;
     //numero de avioes em execução
-    int navioes;
+    int nAvioes;
     bool terminar;
     //buffer circular das mensagens que vao do aviao para o control
-    Mensagem_Aviao_Control mensagens_aviao_controler[CIRCULAR_BUFFERS_SIZE];
-    //buffer circular das mensagens que vao do control para o aviao
-    Mensagem_Control_Aviao mensagens_controler_aviao[CIRCULAR_BUFFERS_SIZE];
+    Mensagem_Control buffer_mensagens_control[CIRCULAR_BUFFERS_SIZE];
+    int posReader, posWriter;
+    SharedMemoryMap_control();
 };
 
 
-struct DadosThreads {
-    SharedMemoryMap *memPar; //ponteiro para a memoria partilhada
-    HANDLE hSemEscrita; //handle para o semaforo que controla as escritas (controla quantas posicoes estao vazias)
-    HANDLE hSemLeitura; //handle para o semaforo que controla as leituras (controla quantas posicoes estao preenchidas)
-    HANDLE hMutex;
-    int terminar; // 1 para sair, 0 em caso contr�rio
-    int id;
+//struct DadosThreads {
+//    SharedMemoryMap_control *memPar; //ponteiro para a memoria partilhada
+//    HANDLE hSemEscrita; //handle para o semaforo que controla as escritas (controla quantas posicoes estao vazias)
+//    HANDLE hSemLeitura; //handle para o semaforo que controla as leituras (controla quantas posicoes estao preenchidas)
+//    HANDLE hMutex;
+//    int terminar; // 1 para sair, 0 em caso contr�rio
+//    int id;
+//};
+
+
+struct GuardLock {
+    ~GuardLock();
+    HANDLE mutex;
+    GuardLock(HANDLE _mutex);
+    GuardLock(GuardLock&& guard);
 };
+
+
+
+
+

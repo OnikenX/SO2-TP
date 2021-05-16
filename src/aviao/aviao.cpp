@@ -3,6 +3,11 @@
 
 #include "aviao.hpp"
 
+//novo destino
+//iniciar voo
+//suicidio
+
+
 
 
 

@@ -21,11 +21,11 @@ include_directories(src)
 set(control_core src/control/control.cpp
         src/control/startup.cpp)
 set(control_menu src/control/menu.cpp)
-set(utils src/utils.cpp)
-add_executable(SO2-TP-control src/control/main.cpp
-        ${control_core} ${control_menu} ${utils})
 
-add_executable(SO2-TP-aviao src/aviao/aviao.cpp src/aviao/main.cpp src/aviao/startup.cpp ${utils})
+add_executable(SO2-TP-control src/control/main.cpp
+        ${control_core} ${control_menu} src/utils.cpp)
+
+add_executable(SO2-TP-aviao src/aviao/aviao.cpp src/aviao/main.cpp src/aviao/startup.cpp src/utils.cpp)
 
 add_executable(SO2-TP-passag src/passag.cpp)
 
@@ -33,4 +33,4 @@ add_executable(exemplo_consumer src/exemplo_consumer.c)
 add_executable(exemplo_producer src/exemplo_producer.c)
 
 #tests
-add_executable(test src/test.cpp)
+add_executable(test src/test.cpp src/utils.cpp)

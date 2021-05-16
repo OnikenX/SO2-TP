@@ -2,7 +2,7 @@
 //funções do control que servem de inicialização
 
 
-void shared_memory_verification(HANDLE &hMapFile, SharedMemoryMap *&pBuf) {
+void shared_memory_verification(HANDLE &hMapFile, SharedMemoryMap_control *&pBuf) {
 
     //cria se um file maping
     hMapFile = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, SHARED_MEMORY_NAME);
@@ -11,11 +11,11 @@ void shared_memory_verification(HANDLE &hMapFile, SharedMemoryMap *&pBuf) {
         return;
     }
 
-    pBuf = (SharedMemoryMap *) MapViewOfFile(hMapFile,   // handle to map object
+    pBuf = (SharedMemoryMap_control *) MapViewOfFile(hMapFile,   // handle to map object
                                              FILE_MAP_ALL_ACCESS, // read/write permission
                                              0,
-                                             0,
-                                             sizeof(SharedMemoryMap)
+                                                     0,
+                                                     sizeof(SharedMemoryMap_control)
     );
 
     if (pBuf == nullptr) {
@@ -43,8 +43,13 @@ HMODULE getdll() {
 std::optional<std::unique_ptr<AviaoInstance>>
 AviaoInstance::create(TCHAR *nome_do_aeroporto, int velocidade, int cap_max) {
 
+    if (!SharedLocks::get()){
+        tcerr << t("Erro a criar mutex e semaforos partilhados.") << std::endl;
+        return std::nullopt;
+    }
+
     HANDLE hMapFile = nullptr;
-    SharedMemoryMap *sharedMemoryMap = nullptr;
+    SharedMemoryMap_control *sharedMemoryMap = nullptr;
     shared_memory_verification(hMapFile, sharedMemoryMap);
     if (hMapFile == nullptr || sharedMemoryMap == nullptr)
         return std::nullopt;
@@ -64,7 +69,7 @@ AviaoInstance::create(TCHAR *nome_do_aeroporto, int velocidade, int cap_max) {
 }
 
 
-AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap *sharedMemoryMap,
+AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMemoryMap,
                              void *dllHandle, TCHAR *nome_do_aeroporto, int velocidade, int cap_max)
         : hMapFile(hMapFile), sharedMemoryMap(sharedMemoryMap), dllHandle(dllHandle),
           nome_do_aeroporto(nome_do_aeroporto), velocidade(velocidade), cap_max(cap_max) {

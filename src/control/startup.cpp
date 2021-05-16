@@ -2,7 +2,7 @@
 //funções do control que servem de inicialização
 
 Control::Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
-                 SharedMemoryMap *view_of_file_pointer, HANDLE mutex_interno)
+                 SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno)
         : MAX_AVIOES(max_avioes), MAX_AEROPORTOS(max_aeroportos), shared_memory_handle(shared_memory_handle),
           view_of_file_pointer(view_of_file_pointer), aceita_avioes(true), mutex_interno(mutex_interno) {}
 
@@ -63,9 +63,14 @@ bool Control::setup_do_registry(DWORD &max_avioes, DWORD &max_aeroportos) {
 
 std::optional<std::unique_ptr<Control>> Control::create(DWORD max_avioes, DWORD max_aeroportos) {
 
+    if (!SharedLocks::get()){
+        tcerr << t("Erro a criar mutex e semaforos partilhados.") << std::endl;
+        return std::nullopt;
+    }
+
     //cria se um file maping
     HANDLE hMapFile =
-            CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(SharedMemoryMap),
+            CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(SharedMemoryMap_control),
                               SHARED_MEMORY_NAME);
 
     if (hMapFile == NULL) {
@@ -79,11 +84,11 @@ std::optional<std::unique_ptr<Control>> Control::create(DWORD max_avioes, DWORD 
         return std::nullopt;
     }
 
-    auto pBuf = (SharedMemoryMap *) MapViewOfFile(hMapFile,   // handle to map object
+    auto pBuf = (SharedMemoryMap_control *) MapViewOfFile(hMapFile,   // handle to map object
                                                   FILE_MAP_ALL_ACCESS, // read/write permission
                                                   0,
-                                                  0,
-                                                  sizeof(SharedMemoryMap)
+                                                          0,
+                                                          sizeof(SharedMemoryMap_control)
     );
 
     if (pBuf == NULL) {
@@ -98,7 +103,6 @@ std::optional<std::unique_ptr<Control>> Control::create(DWORD max_avioes, DWORD 
         CloseHandle(hMapFile);
         UnmapViewOfFile(pBuf);
     }
-
 
     if (!setup_do_registry(max_avioes, max_aeroportos)) {
         CloseHandle(hMapFile);

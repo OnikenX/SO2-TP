@@ -70,9 +70,12 @@ void Menu::run() {
 }
 
 void Menu::cria_aeroporto() {
-    if (this->control.MAX_AEROPORTOS <= this->counter_aeroporto) {
-        tcout << t("Já foi atingido o limite de Aeroportos possiveis") << std::endl;
-        return;
+    {
+        auto guard = GuardLock(control.mutex_interno);
+        if (this->control.MAX_AEROPORTOS <= this->counter_aeroporto) {
+            tcout << t("Já foi atingido o limite de Aeroportos possiveis") << std::endl;
+            return;
+        }
     }
     Aeroporto a;
     tcout << t("Insira as Coordenadas do novo Aeroporto:") << std::endl;
@@ -83,6 +86,7 @@ void Menu::cria_aeroporto() {
             tcout << t("Nome do Aeroporto:");
             tcout.flush();
             tcin >> a.nome;
+            auto guard = GuardLock(control.mutex_interno);
             auto existe = std::find_if(std::begin(this->control.aeroportos), std::end(this->control.aeroportos),
                                        [&](Aeroporto tmp) { return !_tcscmp(tmp.nome, a.nome); });
             if (existe != std::end(this->control.aeroportos)) {
@@ -101,22 +105,29 @@ void Menu::cria_aeroporto() {
             tcout.flush();
             tcin >> a.pos.y;
         } while (a.pos.y < 0 || a.pos.y > 999);
-        for (auto &elem : this->control.aeroportos) {
-            int tmpX = abs(elem.pos.x - a.pos.x);
-            int tmpY = abs(elem.pos.y - a.pos.y);
-            if (tmpX < 10 && tmpY < 10) {
-                tcout << t("Já existe um aeroporto nas redondezas, não me parece boa ideia construir um aqui")
-                      << std::endl;
-                aeroporto_near = true;
+        {
+            auto guard = GuardLock(control.mutex_interno);
+            for (auto &elem : this->control.aeroportos) {
+                int tmpX = abs(elem.pos.x - a.pos.x);
+                int tmpY = abs(elem.pos.y - a.pos.y);
+                if (tmpX < 10 && tmpY < 10) {
+                    tcout << t("Já existe um aeroporto nas redondezas, não me parece boa ideia construir um aqui")
+                          << std::endl;
+                    aeroporto_near = true;
+                }
             }
         }
     } while (aeroporto_near);
 
     a.IDAero = this->counter_aeroporto++;
-    this->control.aeroportos.insert(this->control.aeroportos.end(), a);
+    {
+        auto guard = GuardLock(control.mutex_interno);
+        this->control.aeroportos.insert(this->control.aeroportos.end(), a);
+    }
 }
 
 void Menu::consulta_aeroporto() {
+    auto guard = GuardLock(control.mutex_interno);
     for (int i = 0; i < counter_aeroporto; i++) {
         tcout << t("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@") << std::endl;
         tcout << t("Aeroporto nr ") << this->control.aeroportos[i].IDAero << std::endl;
@@ -128,6 +139,7 @@ void Menu::consulta_aeroporto() {
 }
 
 void Menu::consultar_aviao() {
+    auto guard = GuardLock(control.mutex_interno);
     for (int i = 0; i < counter_avioes; i++) {
         tcout << t("#############################################################################") << std::endl;
         tcout << t("Avião nr ") << this->control.avioes[i].IDAv << std::endl;
@@ -143,8 +155,10 @@ void Menu::consultar_aviao() {
 }
 
 void Menu::desativa_novos_avioes() {
+    auto guard = GuardLock(control.mutex_interno);
     this->control.aceita_avioes = !this->control.aceita_avioes;
 }
+
 
 void Menu::mata_tudo() {
     control.finalizar();

@@ -4,8 +4,6 @@
 #include <vector>
 #include <unordered_map>
 
-#define MAX_SQUARE_MAP 1000
-
 
 
 struct Control {
@@ -29,12 +27,12 @@ struct Control {
 
     //variables to destroy
     HANDLE shared_memory_handle;
-    SharedMemoryMap* view_of_file_pointer;
+    SharedMemoryMap_control* view_of_file_pointer;
 
     void notifica_tudo();
 
     Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
-            SharedMemoryMap *view_of_file_pointer, HANDLE mutex_interno);
+            SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno);
 
     std::vector<Aeroporto> aeroportos;
     std::unordered_map<unsigned long,Aviao> avioes;
