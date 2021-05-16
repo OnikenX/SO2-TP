@@ -53,7 +53,7 @@ DWORD WINAPI ThreadProdutor(LPVOID param) {
         //esperamos por uma posicao para escrevermos
         WaitForSingleObject(dados->hSemEscrita, INFINITE);
 
-        //esperamos que o mutex esteja livre
+        //esperamos que o mutex_produtor esteja livre
         WaitForSingleObject(dados->hMutex, INFINITE);
 
         //vamos copiar a variavel cel para a memoria partilhada (para a posi��o de escrita)
@@ -64,7 +64,7 @@ DWORD WINAPI ThreadProdutor(LPVOID param) {
         if (dados->memPar->posE == TAM_BUFFER)
             dados->memPar->posE = 0;
 
-        //libertamos o mutex
+        //libertamos o mutex_produtor
         ReleaseMutex(dados->hMutex);
 
         //libertamos o semaforo. temos de libertar uma posicao de leitura
@@ -103,7 +103,7 @@ int _tmain(int argc, TCHAR* argv[])
     //0 porque nao ha nada para ser lido e depois podemos ir até um maximo de 10 posições para serem lidas
     dados.hSemLeitura = CreateSemaphore(NULL, 0, TAM_BUFFER, TEXT("SO2_SEMAFORO_LEITURA"));
 
-    //criar mutex para os produtores
+    //criar mutex_produtor para os produtores
     dados.hMutex = CreateMutex(NULL, FALSE, TEXT("SO2_MUTEX_PRODUTOR"));
 
     if (dados.hSemEscrita == NULL || dados.hSemLeitura == NULL || dados.hMutex == NULL) {
@@ -151,7 +151,7 @@ int _tmain(int argc, TCHAR* argv[])
     
     dados.terminar = 0;
 
-    //temos de usar o mutex para aumentar o nProdutores para termos os ids corretos
+    //temos de usar o mutex_produtor para aumentar o nProdutores para termos os ids corretos
     WaitForSingleObject(dados.hMutex, INFINITE);
     dados.memPar->nProdutores++;
     dados.id = dados.memPar->nProdutores;

@@ -116,14 +116,15 @@ enum Mensagem_types{
 };
 
 
-struct Pedido_confirmar_novo_aviao{
+struct Pedido_info_aeroporto{
     unsigned long id_aeroporto;
 };
 
 
 //union dos possiveis dados a enviar
 union Mensagem_Control_union{
-    Pedido_confirmar_novo_aviao pedidoConfirmarNovoAviao;
+    Pedido_info_aeroporto pedidoConfirmarNovoAviao;
+    Pedido_mover pedidoConfirmarMovimento;
 
 
 };
@@ -151,6 +152,7 @@ enum Mensagem_resposta{
 struct Mensagem_Aviao {
 //    Mensagem_types type;
     Mensagem_resposta resposta;
+    Mensagem_Aviao_union msg;
 };
 
 

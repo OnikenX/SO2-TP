@@ -65,7 +65,7 @@ bool Control::setup_do_registry(DWORD &max_avioes, DWORD &max_aeroportos) {
 std::optional<std::unique_ptr<Control>> Control::create(DWORD max_avioes, DWORD max_aeroportos) {
 
     if (!SharedLocks::get()) {
-        tcerr << t("Erro a criar mutex e semaforos partilhados.") << std::endl;
+        tcerr << t("Erro a criar mutex_produtor e semaforos partilhados.") << std::endl;
         return std::nullopt;
     }
 

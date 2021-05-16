@@ -12,8 +12,8 @@ void shared_memory_verification(HANDLE &hMapFile, SharedMemoryMap_control *&pBuf
     }
 
     pBuf = (SharedMemoryMap_control *) MapViewOfFile(hMapFile,   // handle to map object
-                                             FILE_MAP_ALL_ACCESS, // read/write permission
-                                             0,
+                                                     FILE_MAP_ALL_ACCESS, // read/write permission
+                                                     0,
                                                      0,
                                                      sizeof(SharedMemoryMap_control)
     );
@@ -41,37 +41,45 @@ HMODULE getdll() {
     return hdll;
 }
 
-std::optional<std::unique_ptr<AviaoInstance>>
-AviaoInstance::create(AviaoInstance av) {
+std::unique_ptr<AviaoInstance>
+AviaoInstance::create(AviaoShare av) {
 
-    if (!SharedLocks::get()){
-        tcerr << t("Erro a criar mutex e semaforos partilhados.") << std::endl;
-        return std::nullopt;
+    auto coms = AviaoSharedObjects_aviao::create();
+    if (!coms) {
+        tcerr << t("Erro a criar a memoria partinhada para ser recebida por este aviao.") << std::endl;
+        return nullptr;
+    }
+
+    if (!SharedLocks::get()) {
+        tcerr << t("Erro a criar mutex_produtor e semaforos partilhados para o controller.") << std::endl;
+        return nullptr;
     }
 
     HANDLE hMapFile = nullptr;
     SharedMemoryMap_control *sharedMemoryMap = nullptr;
     shared_memory_verification(hMapFile, sharedMemoryMap);
     if (hMapFile == nullptr || sharedMemoryMap == nullptr)
-        return std::nullopt;
+        return nullptr;
 
     HMODULE dllHandle = getdll();
     if (dllHandle == nullptr) {
         UnmapViewOfFile(sharedMemoryMap);
         CloseHandle(hMapFile);
-        return std::nullopt;
+        return nullptr;
     }
     auto aviao = std::make_unique<AviaoInstance>(hMapFile, sharedMemoryMap, dllHandle,
                                                  id_do_aeroporto, velocidade, cap_max);
     if (!aviao->verifica_criacao_com_control())
-        return std::nullopt;
+        return nullptr;
 
-    return std::optional(std::move(aviao));
+
+
+    return aviao;
 }
 
 
-AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMemoryMap,
-                             void *dllHandle, AviaoInstance av)
+AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMemoryMap, void *dllHandle,
+                             AviaoShare av, std::unique_ptr<AviaoSharedObjects_aviao> sharedComs)
         : hMapFile(hMapFile), sharedMemoryMap(sharedMemoryMap), dllHandle(dllHandle),
           id_do_aeroporto(id_do_aeroporto), velocidade(velocidade), cap_max(cap_max) {
     ptr_move_func = GetProcAddress((HMODULE) dllHandle, "move");

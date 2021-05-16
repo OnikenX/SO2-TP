@@ -34,4 +34,4 @@ add_executable(exemplo_consumer src/exemplo_consumer.c)
 add_executable(exemplo_producer src/exemplo_producer.c)
 
 #tests
-add_executable(test src/test.cpp src/utils.cpp)
+add_executable(test src/test.cpp)
