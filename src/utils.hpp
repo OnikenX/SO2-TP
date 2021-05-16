@@ -130,7 +130,10 @@ struct Pedido_mover{
 
 struct Pedido_info_aeroporto{
     unsigned long id_aeroporto;
+    AviaoShare av;
 };
+
+
 
 
 //union dos possiveis dados a enviar
@@ -169,13 +172,14 @@ enum Mensagem_resposta{
     movimento_sucess,
     movimento_fail,
     kill_me,
+    aeroporto_existe,
     aeroporto_nao_existe
     //aviao_existe
 };
 
 
 
-struct Mensagem_Aviao {
+struct Mensagem_Aviao { //aviao recebe
 //    Mensagem_types type;
     Mensagem_resposta resposta_type;
     Mensagem_Aviao_union msg_content;

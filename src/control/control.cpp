@@ -22,15 +22,29 @@ void sendMessage(unsigned long id_aviao, Mensagem_Aviao &mensagemAviao) {
 #endif
 }
 
+auto Control::existeAeroporto(Mensagem_Control &mensagemControl){
+    auto guard = GuardLock(mutex_interno);
+    auto result = std::find_if(std::begin(aeroportos), std::end(aeroportos), [&](Aeroporto& a) {
+        if( a.IDAero == mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto){
+            avioes.push_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av);
+            return true;
+        }
+    });
+    return false;
+}
+
 void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
     Mensagem_Aviao mensagemAviao;
 
     //nao encontrou o aeroporto
-    if (result == std::end(control.aeroportos)) {
-        mensagemAviao.resposta = Mensagem_resposta::aeroporto_nao_existe;
-        sendMessage(mensagemControl.id_aviao, mensagemAviao);
-    }
+    if (control.existeAeroporto(mensagemControl)) {
+        mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_nao_existe;
 
+
+    }else{
+        mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_existe;
+    }
+        sendMessage(mensagemControl.id_aviao, mensagemAviao);
 }
 /*
 void  novoDestino(Control &control, Mensagem_Control &mensagemControl) {
@@ -65,7 +79,7 @@ void alterarCoords (Control &control, Mensagem_Control &mensagemControl) {
     if (control.existeAlguem(mensagemControl)) {
         mensagemAviao.resposta_type = Mensagem_resposta::movimento_fail;
     }else{
-        mensagemAviao.resposta = Mensagem_resposta::movimento_sucess
+        mensagemAviao.resposta_type = Mensagem_resposta::movimento_sucess;
     }
     sendMessage(mensagemControl.id_aviao, mensagemAviao);
 }
@@ -112,14 +126,14 @@ DWORD WINAPI ThreadReadBuffer(LPVOID param) {
                 alterarCoords(control, mensagemControl);
                 break;
             }
-            case novo_destino: {
+       /*     case novo_destino: {
 #ifdef _DEBUG
                 tcout << t("Recebi msg_content \"novo_destino\" por aviao com pid ") << mensagemControl.id_aviao
                       << std::endl;
 #endif
                 novoDestino(control, mensagemControl);
                 break;
-            }
+            }*/
             case suicidio: {
 #ifdef _DEBUG
                 tcout << t("Recebi msg_content \"suicidio\" por aviao com pid ") << mensagemControl.id_aviao

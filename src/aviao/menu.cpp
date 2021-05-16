@@ -58,24 +58,42 @@ void Menu::run() {
     } while (!exit);
 }
 
+//
+
 void Menu::novas_cords() {
     int idAero;
     tcout << t("Insira o ID do Aeroporto distino:") << std::endl;
     tcin >> idAero;
+    Mensagem_Control mc;
+    mc.type=novo_destino;
+    mc.id_aviao=aviaoInstance.aviao.IDAv;
+    std::unique_ptr<Mensagem_Aviao> resposta = aviaoInstance.sendMessage(true, mc);
+    if(resposta->resposta_type==aeroporto_existe){
+
+    }
 
     //Confirmar id e atualizar coords
 
-    {
-        auto guard = GuardLock(menu.mutex_interno);
-        this->control.aeroportos.insert(this->control.aeroportos.end(), a);
-    }
 }
 DWORD WINAPI ThreadVoa(LPVOID param) {
     AviaoInstance &aviao = *(AviaoInstance *) param;
-    int cond;
+    int cond, newX, newY;
+    Mensagem_Control mc;
+    mc.type=alterar_coords;
+    mc.id_aviao=aviao.aviao.IDAv;
     do{
         for(int i=0;i<aviao.aviao.velocidade;i++){
-            cond = aviao.move(aviao.aviao.PosA.x,aviao.aviao.PosA.y,aviao.aviao.PosDest.x,aviao.aviao.PosDest.y,&aviao.aviao.PosA.x,&aviao.aviao.PosA.y);
+            cond = aviao.move(aviao.aviao.PosA.x,aviao.aviao.PosA.y,aviao.aviao.PosDest.x,aviao.aviao.PosDest.y,&newX,&newY);
+            mc.mensagem.pedidoConfirmarMovimento.x=newX;
+            mc.mensagem.pedidoConfirmarMovimento.y=newY;
+            std::unique_ptr<Mensagem_Aviao> resposta = aviao.sendMessage(true, mc);
+            //recebe msg
+            if(resposta->resposta_type==movimento_sucess){
+                aviao.aviao.PosA.x=newX;
+                aviao.aviao.PosA.y=newY;
+            }else{
+                tcout << t("não houve movimento, ou havia algo a estrovar ou a piloto adormeceu") << std::endl ;
+            }
 
             tcout << t("X: ") << aviao.aviao.PosA.x << t("\tY: ") << aviao.aviao.PosA.y << t("\t\t X: ") << aviao.aviao.PosDest.x << t("\tY: ") << aviao.aviao.PosDest.y << std::endl;
 
