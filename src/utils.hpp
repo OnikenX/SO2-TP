@@ -41,6 +41,8 @@
 #define SEMAFORO_READ_AVIAO_CONTROL t("SO2_TP_SEMAFORO_READ_AVIAO_CONTROL")
 #define SEMAFORO_WRITE_AVIAO_CONTROL t("SO2_TP_SEMAFORO_WRITE_AVIAO_CONTROL")
 #define MUTEX_PARTILHADO t("SO2_TP_MUTEX_PARTINHADO_BUFFER")
+#define EVENT_KILLER t("Nos_Vamos_Todos_Falecer")
+
 struct SharedLocks {
     HANDLE semaforo_read_control_aviao;
     HANDLE semaforo_write_control_aviao;
@@ -76,6 +78,7 @@ private:
 struct Cords {
     int x;
     int y;
+    bool isEqual(Cords &outro);
 };
 
 struct AviaoShare {
@@ -112,9 +115,17 @@ struct Passa_Thread{
 
 
 enum Mensagem_types{
-    confirmar_novo_aviao
+    confirmar_novo_aviao,
+    alterar_coords,
+    novo_destino,
+    suicidio
+
 };
 
+struct Pedido_mover{
+    unsigned int x;
+    unsigned int y;
+};
 
 struct Pedido_info_aeroporto{
     unsigned long id_aeroporto;
@@ -137,14 +148,28 @@ struct Mensagem_Control {
     Mensagem_Control_union mensagem;
 };
 
+struct Resposta_Mover{
+    bool permissao;
+};
+
+struct Resposta_Novas_Coordenadas{
+    unsigned int x;
+    unsigned int y;
+};
+
 
 union Mensagem_Aviao_union{
+    Resposta_Mover respostaMover;
+    Resposta_Novas_Coordenadas respostaNovasCoordenadas;
 
 };
 enum Mensagem_resposta{
     ok,
-    aeroporto_nao_existe,
-    aviao_existe
+    movimento_sucess,
+    movimento_fail,
+    kill_me,
+    aeroporto_nao_existe
+    //aviao_existe
 };
 
 
@@ -154,6 +179,7 @@ struct Mensagem_Aviao {
     Mensagem_resposta resposta;
     Mensagem_Aviao_union msg;
 };
+
 
 
 //memoria partinha do control

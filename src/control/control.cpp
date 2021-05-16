@@ -89,6 +89,45 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
     }
 
 }
+/*
+void  novoDestino(Control &control, Mensagem_Control &mensagemControl) {
+    Mensagem_Aviao mensagemAviao;
+    auto guard = GuardLock(control.mutex_interno);
+
+    auto result = std::find_if(std::begin(control.aeroportos), std::end(control.aeroportos), [&](Aeroporto& a) {
+        return a.pos.y==mensagemControl.mensagem.pedidoConfirmarMovimento.y && a.pos.x==mensagemControl.mensagem.pedidoConfirmarMovimento.x;
+    });
+
+    if (result == std::end(control.aeroportos)) {
+        mensagemAviao.resposta = Mensagem_resposta::aeroporto_nao_existe;
+        sendMessage(mensagemControl.id_aviao, mensagemAviao);
+    }
+
+}
+*/
+void alterarCoords (Control &control, Mensagem_Control &mensagemControl) {
+    Mensagem_Aviao mensagemAviao;
+    auto guard = GuardLock(control.mutex_interno);
+
+    auto result = std::find_if(std::begin(control.avioes), std::end(control.avioes), [&](AviaoShare& a) {
+        return (a.PosA.y==mensagemControl.mensagem.pedidoConfirmarMovimento.y && a.PosA.x==mensagemControl.mensagem.pedidoConfirmarMovimento.x);
+    });
+
+    if (result == std::end(control.avioes)) {
+        mensagemAviao.resposta = Mensagem_resposta::movimento_fail
+    }else{
+        mensagemAviao.resposta = Mensagem_resposta::movimento_sucess
+    }
+    sendMessage(mensagemControl.id_aviao, mensagemAviao);
+}
+
+void killMe(Control &control, Mensagem_Control &mensagemControl) {
+    Mensagem_Aviao mensagemAviao;
+    //auto guard = GuardLock(control.mutex_interno);
+    mensagemAviao.resposta = Mensagem_resposta::kill_me;
+    sendMessage(mensagemControl.id_aviao, mensagemAviao);
+
+}
 
 DWORD WINAPI ThreadReadBuffer(LPVOID param) {
     Control &control = *(Control *) param;
@@ -117,6 +156,30 @@ DWORD WINAPI ThreadReadBuffer(LPVOID param) {
 #endif
                 confirmarNovoAviao(control, mensagemControl);
                 break;
+            }
+            case alterar_coords: {
+#ifdef _DEBUG
+                tcout << t("Recebi msg \"alterar_coords\" por aviao com pid ") << mensagemControl.id_aviao
+                      << std::endl;
+#endif
+                alterarCoords(control, mensagemControl);
+                break;
+            }
+            case novo_destino: {
+#ifdef _DEBUG
+                tcout << t("Recebi msg \"novo_destino\" por aviao com pid ") << mensagemControl.id_aviao
+                      << std::endl;
+#endif
+                novoDestino(control, mensagemControl);
+                break;
+            }
+            case suicidio: {
+#ifdef _DEBUG
+                tcout << t("Recebi msg \"suicidio\" por aviao com pid ") << mensagemControl.id_aviao
+                      << std::endl;
+                killMe(control, mensagemControl);
+                break;
+#endif
             }
         }
         {

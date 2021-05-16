@@ -67,8 +67,9 @@ AviaoInstance::create(AviaoShare av) {
         CloseHandle(hMapFile);
         return nullptr;
     }
-    auto aviao = std::make_unique<AviaoInstance>(hMapFile, sharedMemoryMap, dllHandle,
-                                                 id_do_aeroporto, velocidade, cap_max);
+
+    auto aviao = std::make_unique<AviaoInstance>(hMapFile, sharedMemoryMap,
+                                                 dllHandle, av);
     if (!aviao->verifica_criacao_com_control())
         return nullptr;
 
@@ -81,9 +82,9 @@ AviaoInstance::create(AviaoShare av) {
 AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMemoryMap, void *dllHandle,
                              AviaoShare av, std::unique_ptr<AviaoSharedObjects_aviao> sharedComs)
         : hMapFile(hMapFile), sharedMemoryMap(sharedMemoryMap), dllHandle(dllHandle),
-          id_do_aeroporto(id_do_aeroporto), velocidade(velocidade), cap_max(cap_max) {
+          id_do_aeroporto(av.IDAv), aviao(av) {
     ptr_move_func = GetProcAddress((HMODULE) dllHandle, "move");
-    id = (int) GetProcessId(nullptr);
+    av.IDAv = (int) GetProcessId(nullptr);
 }
 
 int AviaoInstance::move(int cur_x, int cur_y, int final_dest_x,
