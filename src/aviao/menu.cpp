@@ -69,7 +69,10 @@ void Menu::novas_cords() {
     mc.id_aviao=aviaoInstance.aviao.IDAv;
     std::unique_ptr<Mensagem_Aviao> resposta = aviaoInstance.sendMessage(true, mc);
     if(resposta->resposta_type==aeroporto_existe){
-
+        aviaoInstance.aviao.PosDest.x=resposta->msg_content.respostaNovasCoordenadas.x;
+        aviaoInstance.aviao.PosDest.y=resposta->msg_content.respostaNovasCoordenadas.y;
+    }else{
+        tcout << t("Esse Aeroporto não existe") << std::endl;
     }
 
     //Confirmar id e atualizar coords

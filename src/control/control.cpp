@@ -26,7 +26,7 @@ bool sendMessage(unsigned long id_aviao, Mensagem_Aviao &mensagemAviao) {
 #endif
     return true;
 }
-
+/*
 auto Control::existeAeroporto(Mensagem_Control &mensagemControl){
     auto guard = GuardLock(mutex_interno);
     auto result = std::find_if(std::begin(aeroportos), std::end(aeroportos), [&](Aeroporto& a) {
@@ -36,14 +36,34 @@ auto Control::existeAeroporto(Mensagem_Control &mensagemControl){
         }
     });
     return false;
+}*/
+
+//verifica se o aeroporto existe
+//se é passado o argumento do mensagemAviao e metido o aviao da mensagem no vetor
+bool
+Control::verificaAeroporto_e_insereAviaSeExistir(Mensagem_Control &mensagemControl, Mensagem_Aviao *mensagemAviao) {
+    auto guard = GuardLock(mutex_interno);
+    auto result = std::find_if(std::begin(aeroportos), std::end(aeroportos), [&](Aeroporto &a) {
+        return a.IDAero == mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto;
+    });
+    if (result != std::end(aeroportos)) {
+        if (mensagemAviao) {
+            avioes.push_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av);
+            mensagemAviao->msg_content.respostaNovasCoordenadas.y = result->pos.y;
+            mensagemAviao->msg_content.respostaNovasCoordenadas.x = result->pos.x;
+        }
+        return true;
+    }
+    return false;
+
 }
 
 void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
     Mensagem_Aviao mensagemAviao;
 
     //nao encontrou o aeroporto
-    if (control.existeAeroporto(mensagemControl)) {
-        mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_nao_existe;
+    if (control.verificaAeroporto_e_insereAviaSeExistir(mensagemControl, NULL)) {
+        mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_existe;
 
 
     } else {
@@ -52,22 +72,19 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
     if (!sendMessage(mensagemControl.id_aviao, mensagemAviao))
         tcerr << t("Aviao n tem as suas cenas setadas") << std::endl;
 }
-/*
-void  novoDestino(Control &control, Mensagem_Control &mensagemControl) {
+
+void novoDestino(Control &control, Mensagem_Control &mensagemControl) {
     Mensagem_Aviao mensagemAviao;
-    auto guard = GuardLock(control.mutex_interno);
 
-    auto result = std::find_if(std::begin(control.aeroportos), std::end(control.aeroportos), [&](Aeroporto& a) {
-        return a.pos.y==mensagemControl.mensagem.pedidoConfirmarMovimento.y && a.pos.x==mensagemControl.mensagem.pedidoConfirmarMovimento.x;
-    });
+    if (control.verificaAeroporto_e_insereAviaSeExistir(mensagemControl, &mensagemAviao)) {
+        mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_existe;
 
-    if (result == std::end(control.aeroportos)) {
+    } else {
         mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_nao_existe;
-        sendMessage(mensagemControl.id_aviao, mensagemAviao);
     }
-
+    sendMessage(mensagemControl.id_aviao, mensagemAviao);
 }
-*/
+
 
 bool Control::existeAlguem(Mensagem_Control &mensagemControl) {
     auto guard = GuardLock(mutex_interno);
@@ -132,14 +149,14 @@ DWORD WINAPI ThreadReadBuffer(LPVOID param) {
                 alterarCoords(control, mensagemControl);
                 break;
             }
-       /*     case novo_destino: {
+            case novo_destino: {
 #ifdef _DEBUG
                 tcout << t("[DEBUG]: Recebi msg_content \"novo_destino\" por aviao com pid ") << mensagemControl.id_aviao
                       << std::endl;
 #endif
                 novoDestino(control, mensagemControl);
                 break;
-            }*/
+            }
             case suicidio: {
 #ifdef _DEBUG
                 tcout << t("[DEBUG]: Recebi msg_content \"suicidio\" por aviao com pid ") << mensagemControl.id_aviao

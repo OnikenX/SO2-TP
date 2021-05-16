@@ -42,6 +42,10 @@
 #define SEMAFORO_WRITE_AVIAO_CONTROL t("SO2_TP_SEMAFORO_WRITE_AVIAO_CONTROL")
 #define MUTEX_PARTILHADO t("SO2_TP_MUTEX_PARTINHADO_BUFFER")
 #define EVENT_KILLER t("Nos_Vamos_Todos_Falecer")
+#define FM_AVIAO t("S02_TP_FM_%lu")
+#define SW_AVIAO t("S02_TP_SW_%lu")
+#define SR_AVIAO t("S02_TP_SR_%lu")
+#define MT_AVIAO t("S02_TP_MT_%lu")
 
 struct SharedLocks {
     HANDLE semaforo_read_control_aviao;
