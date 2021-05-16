@@ -20,7 +20,7 @@ void Menu::run() {
         else
             tcout << t("**   5 - More Planes Please    **") << std::endl;
         tcout << t("**                             **") << std::endl;
-        tcout << t("**   9 - Shutdown total        **") << std::endl;
+        tcout << t("**   6 - Shutdown total        **") << std::endl;
         tcout << t("*********************************") << std::endl;
         tcout << t("*********************************") << std::endl << std::endl;
 //        _fgetts(op, 25, stdin);
@@ -43,7 +43,7 @@ void Menu::run() {
 //        op[_tcslen(op) - 1] = t('\0');
         tcout << t("Input: ") << input << std::endl;
         switch (input) {
-            case 9:
+            case 6:
                 mata_tudo();
                 exit = true;
                 break;

@@ -41,7 +41,7 @@ HMODULE getdll() {
 }
 
 std::optional<std::unique_ptr<AviaoInstance>>
-AviaoInstance::create(TCHAR *nome_do_aeroporto, int velocidade, int cap_max) {
+AviaoInstance::create(int id_do_aeroporto, int velocidade, int cap_max) {
 
     if (!SharedLocks::get()){
         tcerr << t("Erro a criar mutex e semaforos partilhados.") << std::endl;
@@ -61,7 +61,7 @@ AviaoInstance::create(TCHAR *nome_do_aeroporto, int velocidade, int cap_max) {
         return std::nullopt;
     }
     auto aviao = std::make_unique<AviaoInstance>(hMapFile, sharedMemoryMap, dllHandle,
-                                                 nome_do_aeroporto, velocidade, cap_max);
+                                                 id_do_aeroporto, velocidade, cap_max);
     if (!aviao->verifica_criacao_com_control())
         return std::nullopt;
 
@@ -72,7 +72,7 @@ AviaoInstance::create(TCHAR *nome_do_aeroporto, int velocidade, int cap_max) {
 AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMemoryMap,
                              void *dllHandle, TCHAR *nome_do_aeroporto, int velocidade, int cap_max)
         : hMapFile(hMapFile), sharedMemoryMap(sharedMemoryMap), dllHandle(dllHandle),
-          nome_do_aeroporto(nome_do_aeroporto), velocidade(velocidade), cap_max(cap_max) {
+          id_do_aeroporto(id_do_aeroporto), velocidade(velocidade), cap_max(cap_max) {
     ptr_move_func = GetProcAddress((HMODULE) dllHandle, "move");
     id = (int) GetProcessId(nullptr);
 }
