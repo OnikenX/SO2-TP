@@ -165,6 +165,6 @@ void Menu::desativa_novos_avioes() {
 
 
 void Menu::mata_tudo() {
-    control.finalizar();
+    control.liberta_o_jack();
     //fechar tudo e mandar msg_content a avisar
 }

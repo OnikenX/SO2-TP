@@ -6,7 +6,7 @@
 
 SharedLocks::SharedLocks() :
         semaforo_read_control_aviao(nullptr), semaforo_write_control_aviao(nullptr),
-        mutex_partilhado(nullptr), firsttime(true), erros(false), evento_killall(nullptr) {}
+        mutex_partilhado(nullptr), firsttime(true), erros(false), evento_JackTheReaper(nullptr) {}
 
 SharedLocks *SharedLocks::get() {
     static SharedLocks s;
@@ -15,15 +15,18 @@ SharedLocks *SharedLocks::get() {
                 CreateSemaphore(NULL, 0, CIRCULAR_BUFFERS_SIZE, SEMAFORO_READ_CONTROL_AVIAO);
         s.semaforo_write_control_aviao =
                 CreateSemaphore(NULL, CIRCULAR_BUFFERS_SIZE, CIRCULAR_BUFFERS_SIZE, SEMAFORO_WRITE_CONTROL_AVIAO);
-        s.mutex_partilhado = CreateMutex(NULL, TRUE, MUTEX_PARTILHADO);
-        s.evento_killall = CreateEvent(nullptr, TRUE, FALSE, EVENT_KILLER);
+        s.evento_JackTheReaper = CreateEvent(nullptr, TRUE, FALSE, EVENT_KILLER);
+        SetLastError(0);
+        s.mutex_partilhado = CreateMutex(NULL, FALSE, MUTEX_PARTILHADO);
         s.firsttime = false;
         if (!s.semaforo_read_control_aviao || !s.semaforo_write_control_aviao
-            || !s.mutex_partilhado || !s.evento_killall) {
+            || !s.mutex_partilhado || !s.evento_JackTheReaper) {
             s.closeall();
             s.erros = true;
             return nullptr;
         }
+        if(GetLastError() != ERROR_ALREADY_EXISTS)
+            ReleaseMutex(s.mutex_partilhado);
         return &s;
     } else {
         if (s.erros)
@@ -38,8 +41,8 @@ void SharedLocks::closeall() {
         CloseHandle(this->semaforo_read_control_aviao);
     if (this->semaforo_write_control_aviao)
         CloseHandle(this->semaforo_write_control_aviao);
-    if (this->evento_killall)
-        CloseHandle(this->evento_killall);
+    if (this->evento_JackTheReaper)
+        CloseHandle(this->evento_JackTheReaper);
     if (this->mutex_partilhado)
         CloseHandle(this->mutex_partilhado);
     this->semaforo_read_control_aviao = this->semaforo_write_control_aviao = nullptr;
@@ -47,6 +50,9 @@ void SharedLocks::closeall() {
 
 
 SharedLocks::~SharedLocks() {
+#ifdef _DEBUG
+    tcout << t("[DEBUG]: Destroing SharedLocks...") << std::endl;
+#endif
     closeall();
 }
 
@@ -54,11 +60,11 @@ SharedLocks::~SharedLocks() {
 //implementacao do guard lock
 GuardLock::GuardLock(HANDLE _mutex) : mutex(_mutex) {
 #ifdef _DEBUG
-    tcout << t("geting lock\n");
+    tcout << t("[DEBUG]: Geting lock\n");
 #endif
     auto switcher = WaitForSingleObject(mutex, INFINITE);
 #ifdef _DEBUG
-    tcout << t("waited\n");
+    tcout << t("[DEBUG]: waited\n");
 #endif
     switch (switcher) {
         case WAIT_ABANDONED:
@@ -84,7 +90,7 @@ GuardLock::GuardLock(HANDLE _mutex) : mutex(_mutex) {
 GuardLock::~GuardLock() {
     ReleaseMutex(mutex);
 #ifdef _DEBUG
-    tcout << t("closing Guard\n");
+    tcout << t("[DEBUG]: Destroing GuardLock...") << std::endl;
 #endif
 }
 

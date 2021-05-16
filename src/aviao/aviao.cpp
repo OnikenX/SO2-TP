@@ -10,12 +10,12 @@
 //TODO: corrigir esta thread
 DWORD WINAPI Limbo(LPVOID param) {
 #ifdef _DEBUG
-    tcout << t("waiting for death ...") << std::endl;
+    tcout << t("[DEBUG]: waiting for death ...") << std::endl;
 #endif
     HANDLE evento = CreateEvent(nullptr, TRUE, FALSE, EVENT_KILLER);
     WaitForSingleObject(evento, INFINITE);
 #ifdef _DEBUG
-    tcout << t("BOOM !!X\\ RIP In Piece );") << std::endl;
+    tcout << t("[DEBUG]: BOOM !!X\\ RIP In Piece );") << std::endl;
 #endif
     return 1;
 }
@@ -43,11 +43,13 @@ std::unique_ptr<Mensagem_Aviao> AviaoInstance::sendMessage(bool recebeResposta, 
     ReleaseMutex(SharedLocks::get()->mutex_partilhado);
     ReleaseSemaphore(SharedLocks::get()->semaforo_read_control_aviao, 1, nullptr);
 #ifdef _DEBUG
-    tcout << t("mensagem enviada") << std::endl;
+    tcout << t("[DEBUG]: Mensagem enviada") << std::endl;
 #endif
     if(!recebeResposta)
         return nullptr;
+
     auto resposta = std::make_unique<Mensagem_Aviao>();
+
     WaitForSingleObject(this->sharedComs->semaforo_read, INFINITE);
     WaitForSingleObject(this->sharedComs->mutex_produtor, INFINITE);
 
@@ -55,6 +57,11 @@ std::unique_ptr<Mensagem_Aviao> AviaoInstance::sendMessage(bool recebeResposta, 
 
     ReleaseMutex(sharedComs->mutex_produtor);
     ReleaseSemaphore(this->sharedComs->semaforo_write, 1, nullptr);
+
+
+#ifdef _DEBUG
+    tcout << t("[DEBUG]: Mensagem recebida.") << std::endl;
+#endif
     return resposta;
 }
 
@@ -68,6 +75,12 @@ int AviaoInstance::run() {
     WaitForMultipleObjects(nThreads, threads, TRUE, INFINITE);
 
     return 0;
+}
+
+void AviaoInstance::suicidio() {
+    Mensagem_Control mensagemControl{};
+    mensagemControl.type = Mensagem_types::suicidio;
+    sendMessage(false, mensagemControl);
 }
 
 

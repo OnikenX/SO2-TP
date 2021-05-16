@@ -47,7 +47,7 @@ struct SharedLocks {
     HANDLE semaforo_read_control_aviao;
     HANDLE semaforo_write_control_aviao;
     HANDLE mutex_partilhado;
-    HANDLE evento_killall;
+    HANDLE evento_JackTheReaper;
     static SharedLocks *get();
 
     //define se o singleton acabou de ser criado
@@ -63,6 +63,8 @@ struct SharedLocks {
 private:
     void closeall();
 };
+
+
 
 #define CIRCULAR_BUFFERS_SIZE 50
 
@@ -168,8 +170,7 @@ union Mensagem_Aviao_union{
 
 };
 enum Mensagem_resposta{
-    ok,
-    movimento_sucess,
+    lol_ok,
     movimento_fail,
     kill_me,
     aeroporto_existe,

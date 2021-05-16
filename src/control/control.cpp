@@ -8,18 +8,23 @@ DWORD WINAPI ThreadMenu(LPVOID param) {
     return 1;
 }
 
-void sendMessage(unsigned long id_aviao, Mensagem_Aviao &mensagemAviao) {
+bool sendMessage(unsigned long id_aviao, Mensagem_Aviao &mensagemAviao) {
     auto coms = AviaoSharedObjects_control::create(id_aviao);
     if (!coms)
-        return;
-    WaitForSingleObject(coms->semaforo_read, INFINITE);
+        return false;
+    _tprintf(t("Boas.....\n"));
+    WaitForSingleObject(coms->semaforo_write, INFINITE);
     WaitForSingleObject(coms->mutex, INFINITE);
+
     CopyMemory(&coms->sharedMensagemAviao, &mensagemAviao, sizeof(Mensagem_Aviao));
+
     ReleaseMutex(coms->mutex);
     ReleaseSemaphore(coms->semaforo_read, 1, nullptr);
+
 #ifdef _DEBUG
     tcout << t("[DEBUG]: Mensagem enviada.") << std::endl;
 #endif
+    return true;
 }
 
 auto Control::existeAeroporto(Mensagem_Control &mensagemControl){
@@ -41,10 +46,11 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
         mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_nao_existe;
 
 
-    }else{
-        mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_existe;
+    } else {
+        mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_nao_existe;
     }
-        sendMessage(mensagemControl.id_aviao, mensagemAviao);
+    if (!sendMessage(mensagemControl.id_aviao, mensagemAviao))
+        tcerr << t("Aviao n tem as suas cenas setadas") << std::endl;
 }
 /*
 void  novoDestino(Control &control, Mensagem_Control &mensagemControl) {
@@ -63,23 +69,23 @@ void  novoDestino(Control &control, Mensagem_Control &mensagemControl) {
 }
 */
 
-
-bool Control::existeAlguem(Mensagem_Control &mensagemControl){
+bool Control::existeAlguem(Mensagem_Control &mensagemControl) {
     auto guard = GuardLock(mutex_interno);
-    for(auto& a: avioes){
-        if(a.PosA.y==mensagemControl.mensagem.pedidoConfirmarMovimento.y && a.PosA.x==mensagemControl.mensagem.pedidoConfirmarMovimento.x){
+    for (auto &a: avioes) {
+        if (a.PosA.y == mensagemControl.mensagem.pedidoConfirmarMovimento.y &&
+            a.PosA.x == mensagemControl.mensagem.pedidoConfirmarMovimento.x) {
             return true;
         }
     }
     return false;
 }
 
-void alterarCoords (Control &control, Mensagem_Control &mensagemControl) {
+void alterarCoords(Control &control, Mensagem_Control &mensagemControl) {
     Mensagem_Aviao mensagemAviao;
     if (control.existeAlguem(mensagemControl)) {
         mensagemAviao.resposta_type = Mensagem_resposta::movimento_fail;
-    }else{
-        mensagemAviao.resposta_type = Mensagem_resposta::movimento_sucess;
+    } else {
+        mensagemAviao.resposta_type = Mensagem_resposta::lol_ok;
     }
     sendMessage(mensagemControl.id_aviao, mensagemAviao);
 }
@@ -107,12 +113,12 @@ DWORD WINAPI ThreadReadBuffer(LPVOID param) {
             sharedMem.posReader = 0;
 
         ReleaseMutex(locks.mutex_partilhado);
-        ReleaseSemaphore(locks.semaforo_read_control_aviao, 1, NULL);
+        ReleaseSemaphore(locks.semaforo_write_control_aviao, 1, nullptr);
 
         switch (mensagemControl.type) {
             case confirmar_novo_aviao: {
 #ifdef _DEBUG
-                tcout << t("Recebi msg_content \"confirmar_novo_aviao\" por aviao com pid ") << mensagemControl.id_aviao
+                tcout << t("[DEBUG]: Recebi msg_content \"confirmar_novo_aviao\" por aviao com pid ") << mensagemControl.id_aviao
                       << std::endl;
 #endif
                 confirmarNovoAviao(control, mensagemControl);
@@ -120,7 +126,7 @@ DWORD WINAPI ThreadReadBuffer(LPVOID param) {
             }
             case alterar_coords: {
 #ifdef _DEBUG
-                tcout << t("Recebi msg_content \"alterar_coords\" por aviao com pid ") << mensagemControl.id_aviao
+                tcout << t("[DEBUG]: Recebi msg_content \"alterar_coords\" por aviao com pid ") << mensagemControl.id_aviao
                       << std::endl;
 #endif
                 alterarCoords(control, mensagemControl);
@@ -128,7 +134,7 @@ DWORD WINAPI ThreadReadBuffer(LPVOID param) {
             }
        /*     case novo_destino: {
 #ifdef _DEBUG
-                tcout << t("Recebi msg_content \"novo_destino\" por aviao com pid ") << mensagemControl.id_aviao
+                tcout << t("[DEBUG]: Recebi msg_content \"novo_destino\" por aviao com pid ") << mensagemControl.id_aviao
                       << std::endl;
 #endif
                 novoDestino(control, mensagemControl);
@@ -136,7 +142,7 @@ DWORD WINAPI ThreadReadBuffer(LPVOID param) {
             }*/
             case suicidio: {
 #ifdef _DEBUG
-                tcout << t("Recebi msg_content \"suicidio\" por aviao com pid ") << mensagemControl.id_aviao
+                tcout << t("[DEBUG]: Recebi msg_content \"suicidio\" por aviao com pid ") << mensagemControl.id_aviao
                       << std::endl;
                 killMe(control, mensagemControl);
                 break;
@@ -162,4 +168,5 @@ int Control::run() {
     WaitForMultipleObjects(nthreads, threads, TRUE, INFINITE);
     return 0;
 }
+
 

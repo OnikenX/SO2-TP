@@ -33,9 +33,9 @@ struct Control {
     void liberta_o_jack();
 
     //verifica se existe um aviao na mesma localizaao
-    bool Control::existeAlguem(Mensagem_Control &mensagemControl);
+    bool existeAlguem(Mensagem_Control &mensagemControl);
 
-    auto Control::existeAeroporto(Mensagem_Control &mensagemControl);
+    bool verificaAeroporto_e_insereAviaSeExistir(Mensagem_Control &mensagemControl, Mensagem_Aviao *mensagemAviao);
 
     Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
             SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno);
@@ -50,7 +50,7 @@ struct AviaoSharedObjects_control {
     AviaoSharedObjects_control(HANDLE mutex, HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
                                Mensagem_Aviao *sharedMensagemAviao);
 
-    static std::unique_ptr<AviaoSharedObjects_control> AviaoSharedObjects_control::create(unsigned long id_aviao);
+    static std::unique_ptr<AviaoSharedObjects_control> create(unsigned long id_aviao);
 
     HANDLE mutex, semaforo_write, semaforo_read, filemap;
     Mensagem_Aviao *sharedMensagemAviao;

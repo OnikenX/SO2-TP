@@ -12,9 +12,9 @@ struct AviaoSharedObjects_aviao {
                              HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
                              Mensagem_Aviao *sharedMensagemAviao);
 
-    static std::unique_ptr<AviaoSharedObjects_aviao> create();
+    static std::unique_ptr<AviaoSharedObjects_aviao> create(unsigned long id_aviao);
 
-    HANDLE mutex_mensagens, mutex_produtor, semaforo_write, semaforo_read, filemap, evento_morte;
+    HANDLE mutex_mensagens, mutex_produtor, semaforo_write, semaforo_read, filemap;
     Mensagem_Aviao *sharedMensagemAviao;
 
     ~AviaoSharedObjects_aviao();
@@ -29,11 +29,10 @@ struct AviaoInstance {
     void *dllHandle;
     FARPROC ptr_move_func;
     unsigned long id_do_aeroporto;
-
-    bool verifica_criacao_com_control();
-
-    bool em_andamento;
     AviaoShare aviao;
+    bool verifica_criacao_com_control();
+    bool em_andamento;
+
 
     AviaoInstance(const AviaoInstance &) = delete; // non construction-copyable
     AviaoInstance &operator=(const AviaoInstance &) = delete; // non copyable
@@ -52,7 +51,7 @@ struct AviaoInstance {
 
     std::unique_ptr<Mensagem_Aviao> sendMessage(bool recebeResposta, Mensagem_Control &mensagemControl);
 
-private:
+    void suicidio();
 
 };
 

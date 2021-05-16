@@ -43,7 +43,11 @@ HMODULE getdll() {
 
 std::unique_ptr<AviaoInstance>
 AviaoInstance::create(AviaoShare av) {
-    auto coms = AviaoSharedObjects_aviao::create();
+    unsigned long id_aeroporto = av.IDAv;
+    HANDLE process = GetCurrentProcess();
+    av.IDAv = (unsigned long) GetProcessId(process);
+    CloseHandle(process);
+    auto coms = AviaoSharedObjects_aviao::create(av.IDAv);
     if (!coms) {
         tcerr << t("Erro a criar a memoria partinhada para ser recebida por este aviao.") << std::endl;
         return nullptr;
@@ -83,7 +87,6 @@ AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMem
         : hMapFile(hMapFile), sharedMemoryMap(sharedMemoryMap), dllHandle(dllHandle),
           id_do_aeroporto(av.IDAv), aviao(av), sharedComs(std::move(sharedComs)) {
     ptr_move_func = GetProcAddress((HMODULE) dllHandle, "move");
-    av.IDAv = (int) GetProcessId(nullptr);
 }
 
 int AviaoInstance::move(int cur_x, int cur_y, int final_dest_x,
@@ -93,24 +96,55 @@ int AviaoInstance::move(int cur_x, int cur_y, int final_dest_x,
 }
 
 AviaoInstance::~AviaoInstance() {
+#ifdef _DEBUG
+    tcout << t("[DEBUG]: Destroing AviaoInstance...") << std::endl;
+#endif
     FreeLibrary((HMODULE) dllHandle);
     UnmapViewOfFile(sharedMemoryMap);
     CloseHandle(hMapFile);
 
 #ifdef _DEBUG
-    tcout << t("Avião destruido.") << std::endl;
+    tcout << t("[DEBUG]: Avião destruido.") << std::endl;
 #endif
 }
 
 bool AviaoInstance::verifica_criacao_com_control() {
-    return true;
+    Mensagem_Control mensagemControl{};
+    mensagemControl.type = Mensagem_types::confirmar_novo_aviao;
+    mensagemControl.id_aviao = aviao.IDAv;
+    mensagemControl.mensagem.pedidoConfirmarNovoAviao.av = aviao;
+    mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto = this->id_do_aeroporto;
+    _tprintf(t("fico a espera...\n"));
+    auto resposta = this->sendMessage(true, mensagemControl);
+
+    if (resposta->resposta_type == lol_ok) {
+#ifdef _DEBUG
+        tcout << t("[DEBUG]: Creação aceita com sucesso!") << std::endl;
+#endif
+        return true;
+    } else {
+        tstring causa = "";
+        switch (resposta->resposta_type) {
+            case aeroporto_nao_existe:
+                causa = t("aeroporto_nao_existe");
+                break;
+            default:
+                causa = t("nao_sabida");
+                break;
+        }
+        tcerr << t("[ERRO]: Criação não foi aceite! Causa: ") << causa << std::endl;
+        return false;
+    }
+
+
 }
 
-std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create() {
-    unsigned long id_aviao = GetProcessId(nullptr);
+std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create(unsigned long id_aviao) {
     TCHAR nome[30];
     //shared memory name
-    _stprintf(nome, t("S02_TP_FM_%lu"), id_aviao);
+    _stprintf(nome, FM_AVIAO, id_aviao);
+    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
+
     HANDLE filemap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(Mensagem_Aviao), nome);
     if (!filemap)
         return nullptr;
@@ -123,11 +157,16 @@ std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create() {
     }
 
     HANDLE mutex_mensagens = CreateMutex(nullptr, FALSE, nullptr);
-    _stprintf(nome, t("S02_TP_SR_%lu"), id_aviao);
+    _stprintf(nome, SR_AVIAO, id_aviao);
+    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
+
     HANDLE semaforo_read = CreateSemaphore(nullptr, 0, 1, nome);
-    _stprintf(nome, t("S02_TP_SW_%lu"), id_aviao);
+    _stprintf(nome, SW_AVIAO, id_aviao);
+    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
+
     HANDLE semaforo_write = CreateSemaphore(nullptr, 1, 1, nome);
-    _stprintf(nome, t("S02_TP_MT_%lu"), id_aviao);
+    _stprintf(nome, MT_AVIAO, id_aviao);
+    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
     HANDLE mutex_produtores = CreateMutex(nullptr, FALSE, nome);
     if (!semaforo_read || !semaforo_write || !mutex_produtores || !mutex_mensagens) {
         UnmapViewOfFile(sharedMensagemAviao);
@@ -140,8 +179,8 @@ std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create() {
             CloseHandle(semaforo_read);
         if (semaforo_write)
             CloseHandle(semaforo_write);
-        if (mutex_produtores)
-            return nullptr;
+
+        return nullptr;
     }
 
     return std::make_unique<AviaoSharedObjects_aviao>(mutex_mensagens, mutex_produtores, semaforo_write, semaforo_read,
@@ -156,6 +195,9 @@ AviaoSharedObjects_aviao::AviaoSharedObjects_aviao(HANDLE mutex_mensagens, HANDL
           filemap(filemap), sharedMensagemAviao(sharedMensagemAviao), mutex_mensagens(mutex_mensagens) {}
 
 AviaoSharedObjects_aviao::~AviaoSharedObjects_aviao() {
+#ifdef _DEBUG
+    tcout << t("[DEBUG]: Destroing AviaoSharedObjects_aviao...") << std::endl;
+#endif
     UnmapViewOfFile(sharedMensagemAviao);
     CloseHandle(filemap);
     if (mutex_produtor)

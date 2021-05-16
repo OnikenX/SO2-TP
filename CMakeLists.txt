@@ -4,7 +4,7 @@ project(SO2-TP)
 set(CMAKE_CXX_STANDARD 20)
 
 # activa o unicode para o TCHAR
-add_compile_definitions("UNICODE" "_UNICODE")
+#add_compile_definitions("UNICODE" "_UNICODE")
 # true unicode utf_8
 #add_compile_definitions("UTF8_UNICODE")
 # define especial para debugging
@@ -23,7 +23,7 @@ set(control_core src/control/control.cpp
 set(control_menu src/control/menu.cpp)
 set(utils src/utils.cpp)
 add_executable(SO2-TP-control src/control/main.cpp
-        ${control_core} ${control_menu} )
+        ${control_core} ${control_menu} ${utils} )
 set(aviao_core src/aviao/aviao.cpp src/aviao/main.cpp src/aviao/startup.cpp)
 set(aviao_menu src/aviao/menu.cpp)
 add_executable(SO2-TP-aviao  ${aviao_core} ${aviao_menu} ${utils})

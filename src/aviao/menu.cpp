@@ -88,7 +88,7 @@ DWORD WINAPI ThreadVoa(LPVOID param) {
             mc.mensagem.pedidoConfirmarMovimento.y=newY;
             std::unique_ptr<Mensagem_Aviao> resposta = aviao.sendMessage(true, mc);
             //recebe msg
-            if(resposta->resposta_type==movimento_sucess){
+            if(resposta->resposta_type == lol_ok){
                 aviao.aviao.PosA.x=newX;
                 aviao.aviao.PosA.y=newY;
             }else{
@@ -125,6 +125,6 @@ void Menu::inicia_voo() {
 
 
 void Menu::suicidio() {
-    aviaoInstance.finalizar();
+    aviaoInstance.suicidio();
     //fechar tudo e mandar msg_content a avisar
 }

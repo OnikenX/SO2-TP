@@ -27,9 +27,9 @@ int _tmain(int argc, TCHAR *argv[]) {
     AviaoShare a{};
     a.CapMax = _tstoi(argv[1]);
     a.velocidade = _tstoi(argv[2]);
-    a.IDAv = _tstoi(argv[3]);;
+    a.IDAv = _tstol(argv[3]);
 
-    if (a.velocidade == 0 || a.CapMax == 0 || a.IDAv == 0) {
+    if (a.velocidade <= 0 || a.CapMax <= 0 || a.IDAv <= 0) {
         tcerr <<
               t("ERRO: A velocidade ou a capacidade maxima ou o Id do aeroporto não são numeros maiores que 0.")
               << std::endl;
@@ -37,10 +37,10 @@ int _tmain(int argc, TCHAR *argv[]) {
     }
 
 #ifdef _DEBUG
-    tcout << t("Argumentos dados: ") <<
-          t("\n\tcapacidade maxima: ") << cap_max <<
-          t("\n\tvelocidade: ") << velocidade <<
-          t("\n\tId do aeoroporto: ") << IdAero << std::endl;
+    tcout << t("[DEBUG]: Argumentos dados: ") <<
+          t("\n\tcapacidade maxima: ") << a.CapMax <<
+          t("\n\tvelocidade: ") << a.velocidade <<
+          t("\n\tId do aeoroporto: ") << a.IDAv << std::endl;
 #endif
 
     auto aviao = AviaoInstance::create(a);
@@ -49,7 +49,7 @@ int _tmain(int argc, TCHAR *argv[]) {
     }
 
 #ifdef _DEBUG
-    tcout << t("inicializado com sucesso!!") << std::endl;
+    tcout << t("[DEBUG]: Inicializado com sucesso!!") << std::endl;
 #endif
     aviao->run();
 
