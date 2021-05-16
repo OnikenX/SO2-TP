@@ -79,7 +79,8 @@ DWORD WINAPI ThreadVoa(LPVOID param) {
 
             tcout << t("X: ") << aviao.aviao.PosA.x << t("\tY: ") << aviao.aviao.PosA.y << t("\t\t X: ") << aviao.aviao.PosDest.x << t("\tY: ") << aviao.aviao.PosDest.y << std::endl;
 
-            if(cond == 0){
+
+            if(cond == 0 ){
                 break;
             }
         }
@@ -97,9 +98,8 @@ void Menu::inicia_voo() {
     }
 
 
-    HANDLE Voa_Passarinho;
-    Voa_Passarinho = CreateThread(NULL, 0, ThreadVoa, aviaoInstance, 0, NULL);
-    WaitForSingleObject(ThreadVoa, TRUE, INFINITE);
+    HANDLE Voa_Passarinho = CreateThread(nullptr, 0, ThreadVoa, &aviaoInstance, 0, nullptr);
+    WaitForSingleObject(Voa_Passarinho, INFINITE);
 
 }
 
@@ -108,5 +108,5 @@ void Menu::inicia_voo() {
 
 void Menu::suicidio() {
     aviaoInstance.finalizar();
-    //fechar tudo e mandar msg a avisar
+    //fechar tudo e mandar msg_content a avisar
 }

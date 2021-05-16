@@ -12,7 +12,7 @@ struct AviaoSharedObjects_aviao {
                              HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
                              Mensagem_Aviao *sharedMensagemAviao);
 
-    static std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create();
+    static std::unique_ptr<AviaoSharedObjects_aviao> create();
 
     HANDLE mutex_mensagens, mutex_produtor, semaforo_write, semaforo_read, filemap, evento_morte;
     Mensagem_Aviao *sharedMensagemAviao;
@@ -21,8 +21,11 @@ struct AviaoSharedObjects_aviao {
 };
 
 struct AviaoInstance {
+    //memoria partilhada do control
     SharedMemoryMap_control *sharedMemoryMap;
+    //handle da memoria partinhada
     HANDLE hMapFile;
+    //handle da dll
     void *dllHandle;
     FARPROC ptr_move_func;
     unsigned long id_do_aeroporto;

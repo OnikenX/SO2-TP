@@ -2,10 +2,9 @@
 //funções do control que servem de inicialização
 
 Control::Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
-                 SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno, HANDLE evento_JackTheReaper)
+                 SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno)
         : MAX_AVIOES(max_avioes), MAX_AEROPORTOS(max_aeroportos), shared_memory_handle(shared_memory_handle),
-          view_of_file_pointer(view_of_file_pointer), aceita_avioes(true), mutex_interno(mutex_interno),
-          evento_JackTheReaper(evento_JackTheReaper) {}
+          view_of_file_pointer(view_of_file_pointer), aceita_avioes(true), mutex_interno(mutex_interno){}
 
 
 // registry stuff
@@ -112,21 +111,73 @@ std::optional<std::unique_ptr<Control>> Control::create(DWORD max_avioes, DWORD 
         return std::nullopt;
     }
 
-    HANDLE evento = CreateEvent(nullptr, TRUE, FALSE, EVENT_KILLER);
-    if (!evento) {
-        CloseHandle(hMapFile);
-        UnmapViewOfFile(pBuf);
-        CloseHandle(mutex_interno);
-        return std::nullopt;
-    }
-
     // a razão para usar o unique pointer é para que o compilar n esteja a chamar o contrutor ou o descontrutor desnecessariamente
     // com um unique pointer certificamo nos que n existem copias descessarias do Control ou referencias para ele
-    return std::optional(std::make_unique<Control>(max_avioes, max_aeroportos, hMapFile, pBuf, mutex_interno, evento));
+    return std::optional(std::make_unique<Control>(max_avioes, max_aeroportos, hMapFile, pBuf, mutex_interno));
 }
 
-//
+
 void Control::liberta_o_jack() {
-    SetEvent(evento_JackTheReaper);
+    SetEvent(SharedLocks::get()->evento_killall);
+    auto guard = GuardLock(mutex_interno);
+    terminar = true;
     tcout << t("Isto é o Big Crunch deste universo, foi um prazer poder viajar consigo") << std::endl;
+}
+
+Control::~Control() {
+    UnmapViewOfFile(view_of_file_pointer);
+    CloseHandle(shared_memory_handle);
+    this->liberta_o_jack();
+}
+
+
+std::unique_ptr<AviaoSharedObjects_control> AviaoSharedObjects_control::create(unsigned long id_aviao) {
+    TCHAR nome[30];
+    //shared memory name
+    _stprintf(nome, t("FM_%lu"), id_aviao);
+    HANDLE filemap = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, nome);
+    if (!filemap)
+        return nullptr;
+    auto sharedMensagemAviao =
+            (Mensagem_Aviao *) MapViewOfFile(filemap,FILE_MAP_ALL_ACCESS,
+                                             0, 0, sizeof(Mensagem_Aviao));
+    if (!sharedMensagemAviao) {
+        CloseHandle(filemap);
+        return nullptr;
+    }
+
+    _stprintf(nome, t("SR_%lu"), id_aviao);
+    //shared semafore
+    HANDLE semaforo_read = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, nome);
+    _stprintf(nome, t("SW_%lu"), id_aviao);
+    HANDLE semaforo_write = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, nome);
+    HANDLE mutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, nome);
+    if (!semaforo_read || !semaforo_write || !mutex) {
+        UnmapViewOfFile(sharedMensagemAviao);
+        CloseHandle(filemap);
+        if (mutex)
+            CloseHandle(mutex);
+        if (semaforo_read)
+            CloseHandle(semaforo_read);
+        if (semaforo_write)
+            CloseHandle(semaforo_write);
+        return nullptr;
+    }
+    return std::make_unique<AviaoSharedObjects_control>(mutex, semaforo_write, semaforo_read, filemap, sharedMensagemAviao);
+}
+
+AviaoSharedObjects_control::AviaoSharedObjects_control(HANDLE mutex, HANDLE semaforo_write, HANDLE semaforo_read,
+                                                       HANDLE filemap, Mensagem_Aviao *sharedMensagemAviao)
+        : mutex(mutex), semaforo_write(semaforo_write), semaforo_read(semaforo_read),
+          filemap(filemap), sharedMensagemAviao(sharedMensagemAviao) {}
+
+AviaoSharedObjects_control::~AviaoSharedObjects_control() {
+    UnmapViewOfFile(sharedMensagemAviao);
+    CloseHandle(filemap);
+    if (mutex)
+        CloseHandle(mutex);
+    if (semaforo_read)
+        CloseHandle(semaforo_read);
+    if (semaforo_write)
+        CloseHandle(semaforo_write);
 }

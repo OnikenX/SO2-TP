@@ -47,6 +47,7 @@ struct SharedLocks {
     HANDLE semaforo_read_control_aviao;
     HANDLE semaforo_write_control_aviao;
     HANDLE mutex_partilhado;
+    HANDLE evento_killall;
     static SharedLocks *get();
 
     //define se o singleton acabou de ser criado
@@ -142,7 +143,7 @@ union Mensagem_Control_union{
 
 
 //as mensagens que sao enviadas para o control pelo aviaoInstance
-struct Mensagem_Control {
+struct Mensagem_Control {//o aviao envia isto
     Mensagem_types type;
     unsigned long id_aviao;
     Mensagem_Control_union mensagem;
@@ -176,8 +177,8 @@ enum Mensagem_resposta{
 
 struct Mensagem_Aviao {
 //    Mensagem_types type;
-    Mensagem_resposta resposta;
-    Mensagem_Aviao_union msg;
+    Mensagem_resposta resposta_type;
+    Mensagem_Aviao_union msg_content;
 };
 
 

@@ -6,8 +6,7 @@
 
 SharedLocks::SharedLocks() :
         semaforo_read_control_aviao(nullptr), semaforo_write_control_aviao(nullptr),
-        mutex_partilhado(nullptr), firsttime(true), erros(false) {}
-
+        mutex_partilhado(nullptr), firsttime(true), erros(false), evento_killall(nullptr) {}
 
 SharedLocks *SharedLocks::get() {
     static SharedLocks s;
@@ -17,8 +16,10 @@ SharedLocks *SharedLocks::get() {
         s.semaforo_write_control_aviao =
                 CreateSemaphore(NULL, CIRCULAR_BUFFERS_SIZE, CIRCULAR_BUFFERS_SIZE, SEMAFORO_WRITE_CONTROL_AVIAO);
         s.mutex_partilhado = CreateMutex(NULL, TRUE, MUTEX_PARTILHADO);
+        s.evento_killall = CreateEvent(nullptr, TRUE, FALSE, EVENT_KILLER);
         s.firsttime = false;
-        if (!s.semaforo_read_control_aviao || !s.semaforo_write_control_aviao || !s.mutex_partilhado) {
+        if (!s.semaforo_read_control_aviao || !s.semaforo_write_control_aviao
+            || !s.mutex_partilhado || !s.evento_killall) {
             s.closeall();
             s.erros = true;
             return nullptr;
@@ -37,10 +38,12 @@ void SharedLocks::closeall() {
         CloseHandle(this->semaforo_read_control_aviao);
     if (this->semaforo_write_control_aviao)
         CloseHandle(this->semaforo_write_control_aviao);
-
+    if (this->evento_killall)
+        CloseHandle(this->evento_killall);
+    if (this->mutex_partilhado)
+        CloseHandle(this->mutex_partilhado);
     this->semaforo_read_control_aviao = this->semaforo_write_control_aviao = nullptr;
 }
-
 
 
 SharedLocks::~SharedLocks() {
@@ -85,12 +88,13 @@ GuardLock::~GuardLock() {
 #endif
 }
 
-GuardLock::GuardLock(GuardLock&& guard) {
+GuardLock::GuardLock(GuardLock &&guard) {
     this->mutex = guard.mutex;
 }
 
 
-SharedMemoryMap_control::SharedMemoryMap_control() : se_pode_criar_mais_avioes(true), nAvioes(0), terminar(false),posReader(0), posWriter(0) {
+SharedMemoryMap_control::SharedMemoryMap_control() : se_pode_criar_mais_avioes(true), nAvioes(0), terminar(false),
+                                                     posReader(0), posWriter(0) {
     memset(buffer_mensagens_control, 0, sizeof(Mensagem_Control) * CIRCULAR_BUFFERS_SIZE);
 }
 

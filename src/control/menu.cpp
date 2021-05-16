@@ -166,5 +166,5 @@ void Menu::desativa_novos_avioes() {
 
 void Menu::mata_tudo() {
     control.finalizar();
-    //fechar tudo e mandar msg a avisar
+    //fechar tudo e mandar msg_content a avisar
 }
