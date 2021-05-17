@@ -107,3 +107,5 @@ SharedMemoryMap_control::SharedMemoryMap_control() : se_pode_criar_mais_avioes(t
 bool Cords::isEqual(Cords &outro) {
     return (this->x == outro.x && this->y == outro.y);
 }
+
+Mensagem_Control::Mensagem_Control() {}

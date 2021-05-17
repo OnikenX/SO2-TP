@@ -58,9 +58,9 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
 #ifdef _DEBUG
         tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" aceite.") << std::endl;
 #endif
-    } else if(control.avioes.size()>=control.MAX_AVIOES){
+    } else if (control.avioes.size() >= control.MAX_AVIOES) {
         mensagemAviao.resposta_type = Mensagem_resposta::MAX_Atingido;
-    }else if(!control.aceita_avioes){
+    } else if (!control.aceita_avioes) {
         mensagemAviao.resposta_type = Mensagem_resposta::Porta_Fechada;
     } else {
 #ifdef _DEBUG
@@ -149,6 +149,12 @@ DWORD WINAPI ThreadReadBuffer(LPVOID param) {
 #endif
                 alterarCoords(control, mensagemControl);
                 break;
+                case ping:{
+#ifdef _DEBUG
+                    tcout << t("[DEBUG]: Pong...") << std::endl;
+#endif
+                    break;
+                }
             }
             case novo_destino: {
 #ifdef _DEBUG
@@ -170,26 +176,49 @@ DWORD WINAPI ThreadReadBuffer(LPVOID param) {
         }
         {
             WaitForSingleObject(control.mutex_interno, INFINITE);
-            if (control.terminar)
+            if (control.terminar) {
                 exit = true;
+            } else {
+                auto result = std::find_if(control.avioes.begin(), control.avioes.end(), [&](AviaoShare &aviao) {
+                    return aviao.IDAv == mensagemControl.id_aviao;
+                });
+                if (result != control.avioes.end())
+                    result->update = std::chrono::system_clock::now().time_since_epoch().count();
+            }
             ReleaseMutex(control.mutex_interno);
         }
     }
     return 1;
 }
 
-void limpaAntigos(Control &control){
 
+void limpaAntigos(Control &control) {
+    using namespace std::chrono_literals;
+    HANDLE process;
+    long long now = std::chrono::system_clock::now().time_since_epoch().count();
+    auto guard = GuardLock(control.mutex_interno);
+    control.avioes.erase(
+            std::remove_if(control.avioes.begin(), control.avioes.end(),
+                           [&](const AviaoShare &aviao) {
+                               if (now - aviao.update >= 3000) {
+                                   process = OpenProcess(PROCESS_TERMINATE, FALSE, aviao.IDAv);
+                                   if (process == nullptr)
+                                       tcout << t("Cant end process ") << aviao.IDAv;
+                                   TerminateProcess(process, 3);
+                                   CloseHandle(process);
+                                   return true;
+                               }
+                               return false;
+                           }), control.avioes.end());
 }
 
-[[noreturn]] DWORD WINAPI VerifyValues(LPVOID param){
-    Control&control = *(Control*)param;
-    while(true){
-        Sleep(1000);
-
-
+//verifica a cada 1 segundo se ouve timeouts
+[[noreturn]] DWORD WINAPI VerifyValues(LPVOID param) {
+    Control &control = *(Control *) param;
+    while (true) {
+        Sleep(3000);
+        limpaAntigos(control);
     }
-
 }
 
 //O Nuno Esteve Aqui as 6h30!!!
@@ -198,10 +227,12 @@ int Control::run() {
     //thread de leitura do buffer circular
     CreateThread(NULL, 0, ThreadReadBuffer, this, 0, NULL);
 
+#ifdef PINGS
     //thread da
-    CreateThread(nullptr, 0, VerifyValues, this, 0 , nullptr);
+    CreateThread(nullptr, 0, VerifyValues, this, 0, nullptr);
+#endif
     //menu do control
-    WaitForSingleObject(CreateThread(NULL, 0, ThreadMenu, menu.get(), 0, NULL),INFINITE);
+    WaitForSingleObject(CreateThread(NULL, 0, ThreadMenu, menu.get(), 0, NULL), INFINITE);
 
     return 0;
 }

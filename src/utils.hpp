@@ -7,7 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <optional>//RUST Team
-
+#include <chrono>
 //windows and tchar
 #include <windows.h>
 #include <tchar.h>
@@ -91,6 +91,7 @@ struct AviaoShare {
     int velocidade;
     Cords PosA;
     Cords PosDest;
+    long long update;
 };
 
 struct Aeroporto {
@@ -103,7 +104,8 @@ enum Mensagem_types{
     confirmar_novo_aviao,
     alterar_coords,
     novo_destino,
-    suicidio
+    suicidio,
+    ping
 
 };
 
@@ -130,6 +132,8 @@ union Mensagem_Control_union{
 
 //as mensagens que sao enviadas para o control pelo aviaoInstance
 struct Mensagem_Control {//o aviao envia isto
+    Mensagem_Control();
+
     Mensagem_types type;
     unsigned long id_aviao;
     Mensagem_Control_union mensagem;

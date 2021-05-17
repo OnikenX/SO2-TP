@@ -66,11 +66,26 @@ std::unique_ptr<Mensagem_Aviao> AviaoInstance::sendMessage(bool recebeResposta, 
     return resposta;
 }
 
+[[noreturn]] DWORD WINAPI ThreadUpdater(LPVOID param){
+    AviaoInstance &aviao = *(AviaoInstance*)param;
+    while(true){
+        Mensagem_Control mensagemControl;
+        mensagemControl.type = ping;
+        aviao.sendMessage(false, mensagemControl);
+#ifdef _DEBUG
+        tcout << t("[Debug]: Ping...") << std::endl;
+#endif
+        Sleep(1000);
+    }
+}
+
 int AviaoInstance::run() {
     Wait_to_Die = CreateThread(nullptr, 0, Limbo, nullptr, 0, nullptr);
     //o menu é uma dangling thread porque ele esta sempre a espera
     CreateThread(nullptr, 0, ThreadMenu, this, 0, nullptr);
-
+#ifdef PINGS
+    CreateThread(nullptr, 0, ThreadUpdater, this, 0, nullptr);
+#endif
     WaitForSingleObject(Wait_to_Die, INFINITE);
 
     return 0;

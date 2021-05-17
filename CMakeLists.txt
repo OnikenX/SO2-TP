@@ -7,12 +7,13 @@ set(CMAKE_CXX_STANDARD 20)
 #add_compile_definitions("UNICODE" "_UNICODE")
 # true unicode utf_8
 #add_compile_definitions("UTF8_UNICODE")
+#deifine for esperimental pings
+#add_compile_definitions("PINGS")
 # define especial para debugging
 if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
     add_compile_definitions("_DEBUG")
 endif (CMAKE_BUILD_TYPE EQUAL "DEBUG")
-# workaround win32 bugs
-add_compile_definitions("MICRO$HIT")
+
 
 
 # faz com que o msvc leia todos os source files como utf-8
