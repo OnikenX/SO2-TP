@@ -52,16 +52,16 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
           << mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto << std::endl;
 #endif
     //nao encontrou o aeroporto
-    if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, NULL)) {
+    if (!control.aceita_avioes) {
+        mensagemAviao.resposta_type = Mensagem_resposta::Porta_Fechada;
+    } else if (control.avioes.size() >= control.MAX_AVIOES) {
+        mensagemAviao.resposta_type = Mensagem_resposta::MAX_Atingido;
+    } else if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, NULL)) {
         control.avioes.push_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av);
         mensagemAviao.resposta_type = Mensagem_resposta::lol_ok;
 #ifdef _DEBUG
         tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" aceite.") << std::endl;
 #endif
-    } else if (control.avioes.size() >= control.MAX_AVIOES) {
-        mensagemAviao.resposta_type = Mensagem_resposta::MAX_Atingido;
-    } else if (!control.aceita_avioes) {
-        mensagemAviao.resposta_type = Mensagem_resposta::Porta_Fechada;
     } else {
 #ifdef _DEBUG
         tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" receitado.") << std::endl;
@@ -149,7 +149,7 @@ DWORD WINAPI ThreadReadBuffer(LPVOID param) {
 #endif
                 alterarCoords(control, mensagemControl);
                 break;
-                case ping:{
+                case ping: {
 #ifdef _DEBUG
                     tcout << t("[DEBUG]: Pong...") << std::endl;
 #endif
