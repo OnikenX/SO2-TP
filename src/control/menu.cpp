@@ -126,7 +126,7 @@ void Menu::cria_aeroporto() {
         }
     } while (aeroporto_near);
 
-    a.IDAero = this->counter_aeroporto++;
+    a.IDAero = ++this->counter_aeroporto;
     {
         auto guard = GuardLock(control.mutex_interno);
         this->control.aeroportos.insert(this->control.aeroportos.end(), a);
