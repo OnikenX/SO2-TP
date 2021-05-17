@@ -158,9 +158,6 @@ struct Mensagem_Control {//o aviao envia isto
     Mensagem_Control_union mensagem;
 };
 
-struct Resposta_Mover{
-    bool permissao;
-};
 
 struct Resposta_Novas_Coordenadas{
     unsigned int x;
@@ -169,7 +166,6 @@ struct Resposta_Novas_Coordenadas{
 
 
 union Mensagem_Aviao_union{
-    Resposta_Mover respostaMover;
     Resposta_Novas_Coordenadas respostaNovasCoordenadas;
 
 };
