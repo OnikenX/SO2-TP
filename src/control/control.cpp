@@ -58,6 +58,10 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
 #ifdef _DEBUG
         tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" aceite.") << std::endl;
 #endif
+    } else if(control.avioes.size()>=control.MAX_AVIOES){
+        mensagemAviao.resposta_type = Mensagem_resposta::MAX_Atingido;
+    }else if(!control.aceita_avioes){
+        mensagemAviao.resposta_type = Mensagem_resposta::Porta_Fechada;
     } else {
 #ifdef _DEBUG
         tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" receitado.") << std::endl;

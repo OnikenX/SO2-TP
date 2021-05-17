@@ -10,7 +10,7 @@ void Menu::run() {
     aviaoInstance.em_andamento = false;
     bool exit = false;
     do {
-        //O Nuno Esteve aqui!!!
+        //O Nuno Esteve aqui as 5 da manhã!!!
         tcout << t("\nO que deseja fazer?\n");
         tcout << t("*********************************") << std::endl;
         tcout << t("*********************************") << std::endl;
@@ -78,11 +78,15 @@ void Menu::novas_cords() {
     mc.id_aviao = aviaoInstance.aviao.IDAv;
     mc.mensagem.pedidoConfirmarNovoAviao.id_aeroporto = idAero;
     std::unique_ptr<Mensagem_Aviao> resposta = aviaoInstance.sendMessage(true, mc);
-    if (resposta->resposta_type == aeroporto_existe) {
+    if (resposta->resposta_type == lol_ok) {
         aviaoInstance.aviao.PosDest.x = resposta->msg_content.respostaNovasCoordenadas.x;
         aviaoInstance.aviao.PosDest.y = resposta->msg_content.respostaNovasCoordenadas.y;
+    } else if (resposta->resposta_type == MAX_Atingido) {
+        tcout << t("O Maximo de Aviões foi atingido, e não temos mais copões para MALLOCS, logo azar") << std::endl;
+    } else if (resposta->resposta_type == Porta_Fechada) {
+        tcout << t("Desculpe informar, mas neste Aeroporto trabalham funcionarios publicos") << std::endl;
     } else {
-        tcout << t("Esse Aeroporto não existe") << std::endl;
+        tcout << t("Esse Aeroporto não existe, mas se quiseres eu posso ser o teu Aeroporto XD") << std::endl;
     }
 
     //Confirmar id e atualizar coords
