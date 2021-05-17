@@ -24,6 +24,7 @@ DWORD WINAPI ThreadMenu(LPVOID param) {
     AviaoInstance &aviao = *(AviaoInstance *) param;
     Menu menu(aviao);
     menu.run();
+    TerminateThread(aviao.Wait_to_Die, 2);
     return 1;
 }
 
@@ -66,13 +67,11 @@ std::unique_ptr<Mensagem_Aviao> AviaoInstance::sendMessage(bool recebeResposta, 
 }
 
 int AviaoInstance::run() {
-    HANDLE Wait_to_Die = CreateThread(nullptr, 0, Limbo, nullptr, 0, nullptr);
+    Wait_to_Die = CreateThread(nullptr, 0, Limbo, nullptr, 0, nullptr);
     //o menu é uma dangling thread porque ele esta sempre a espera
     CreateThread(nullptr, 0, ThreadMenu, this, 0, nullptr);
 
-    HANDLE threads[] = {Wait_to_Die};
-    const int nThreads = sizeof(threads) / sizeof(HANDLE);
-    WaitForMultipleObjects(nThreads, threads, TRUE, INFINITE);
+    WaitForSingleObject(Wait_to_Die, INFINITE);
 
     return 0;
 }

@@ -10,7 +10,6 @@ public:
     Menu(const Menu &) = delete; // non construction-copyable
     Menu &operator=(const Menu &) = delete; // non copyable
 private:
-    int counter_avioes;
     int counter_aeroporto;
     AviaoInstance& aviaoInstance;
     HANDLE mutex_em_andamento;

@@ -72,7 +72,7 @@ AviaoInstance::create(AviaoShare av) {
     }
 
     auto aviao = std::make_unique<AviaoInstance>(hMapFile, sharedMemoryMap,
-                                                 dllHandle, av, std::move(coms));
+                                                 dllHandle, av, std::move(coms), id_aeroporto);
 
     if (!aviao->verifica_criacao_com_control())
         return nullptr;
@@ -83,9 +83,10 @@ AviaoInstance::create(AviaoShare av) {
 
 
 AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMemoryMap, void *dllHandle,
-                             AviaoShare av, std::unique_ptr<AviaoSharedObjects_aviao> sharedComs)
+                             AviaoShare av, std::unique_ptr<AviaoSharedObjects_aviao> sharedComs,
+                             unsigned long id_do_aeroporto)
         : hMapFile(hMapFile), sharedMemoryMap(sharedMemoryMap), dllHandle(dllHandle),
-          id_do_aeroporto(av.IDAv), aviao(av), sharedComs(std::move(sharedComs)) {
+          id_do_aeroporto(id_do_aeroporto), aviao(av), sharedComs(std::move(sharedComs)) {
     ptr_move_func = GetProcAddress((HMODULE) dllHandle, "move");
 }
 
@@ -138,11 +139,10 @@ bool AviaoInstance::verifica_criacao_com_control() {
 }
 
 std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create(unsigned long id_aviao) {
-    TCHAR nome[30];
+    TCHAR nome[30]{};
     //shared memory name
     _stprintf(nome, FM_AVIAO, id_aviao);
-    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
-
+//    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
     HANDLE filemap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(Mensagem_Aviao), nome);
     if (!filemap)
         return nullptr;
@@ -156,13 +156,13 @@ std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create(unsig
     HANDLE mutex_em_andamento = CreateMutex(nullptr, FALSE, nullptr);
     HANDLE mutex_mensagens = CreateMutex(nullptr, FALSE, nullptr);
     _stprintf(nome, SR_AVIAO, id_aviao);
-    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
+//    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
     HANDLE semaforo_read = CreateSemaphore(nullptr, 0, 1, nome);
     _stprintf(nome, SW_AVIAO, id_aviao);
-    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
+//    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
     HANDLE semaforo_write = CreateSemaphore(nullptr, 1, 1, nome);
     _stprintf(nome, MT_AVIAO, id_aviao);
-    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
+//    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
     HANDLE mutex_produtores = CreateMutex(nullptr, FALSE, nome);
     if (!semaforo_read || !semaforo_write || !mutex_produtores || !mutex_mensagens || !mutex_em_andamento) {
         UnmapViewOfFile(sharedMensagemAviao);

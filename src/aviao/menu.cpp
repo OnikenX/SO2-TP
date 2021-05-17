@@ -1,7 +1,7 @@
 #include "menu.hpp"
 #include <algorithm>
 
-Menu::Menu(AviaoInstance &aviao) : aviaoInstance(aviao), counter_avioes(0), counter_aeroporto(0) {}
+Menu::Menu(AviaoInstance &aviao) : aviaoInstance(aviao), counter_aeroporto(0) {}
 
 
 void Menu::run() {

@@ -1,7 +1,7 @@
 #include "menu.hpp"
 #include <algorithm>
 
-Menu::Menu(Control &control) : control(control), counter_avioes(0), counter_aeroporto(0) {}
+Menu::Menu(Control &control) : control(control), counter_aeroporto(0) {}
 
 
 void Menu::run() {
@@ -45,7 +45,7 @@ void Menu::run() {
         tcout << t("Input: ") << input << std::endl;
         switch (input) {
             case 6:
-                mata_tudo();
+//                mata_tudo();
                 exit = true;
                 break;
             case 1:
@@ -70,7 +70,7 @@ void Menu::run() {
     } while (!exit);
 }
 
-bool verificaMaxAeroportos(Menu* isto){
+bool verificaMaxAeroportos(Menu *isto) {
     auto guard = GuardLock(isto->control.mutex_interno);
     if (isto->control.MAX_AEROPORTOS <= isto->counter_aeroporto) {
         tcout << t("Já foi atingido o limite de Aeroportos possiveis") << std::endl;
@@ -80,12 +80,12 @@ bool verificaMaxAeroportos(Menu* isto){
 }
 
 void Menu::cria_aeroporto() {
-    if(!verificaMaxAeroportos(this))
+    if (!verificaMaxAeroportos(this))
         return;
     Aeroporto a;
     tcout << t("Insira as Coordenadas do novo Aeroporto:") << std::endl;
     bool aeroporto_near;
-    bool exit_loop =false;
+    bool exit_loop = false;
     do {
         aeroporto_near = false;
         do {
@@ -147,16 +147,15 @@ void Menu::consulta_aeroporto() {
 
 void Menu::consultar_aviao() {
     auto guard = GuardLock(control.mutex_interno);
-    for (int i = 0; i < counter_avioes; i++) {
+    for (auto &aviao : control.avioes) {
         tcout << t("#############################################################################") << std::endl;
-        tcout << t("Avião nr ") << this->control.avioes[i].IDAv << std::endl;
+        tcout << t("Avião nr ") << aviao.IDAv << std::endl;
         tcout << t("Posição atual:") << std::endl;
-        tcout << t("X-> ") << this->control.avioes[i].PosA.x << t("\tY-> ") << control.avioes[i].PosA.y << std::endl;
+        tcout << t("X-> ") << aviao.PosA.x << t("\tY-> ") << aviao.PosA.y << std::endl;
         tcout << t("Destino:") << std::endl;
-        tcout << t("X-> ") << this->control.avioes[i].PosDest.x << t("\tY-> ") << control.avioes[i].PosDest.y
-              << std::endl;
-        tcout << t("Capacidade Maxima: ") << this->control.avioes[i].CapMax << std::endl;
-        tcout << t("Velocidade: ") << this->control.avioes[i].velocidade << std::endl;
+        tcout << t("X-> ") << aviao.PosDest.x << t("\tY-> ") << aviao.PosDest.y << std::endl;
+        tcout << t("Capacidade Maxima: ") << aviao.CapMax << std::endl;
+        tcout << t("Velocidade: ") << aviao.velocidade << std::endl;
     }
     tcout << t("#############################################################################") << std::endl;
 }
@@ -167,7 +166,7 @@ void Menu::desativa_novos_avioes() {
 }
 
 
-void Menu::mata_tudo() {
-    control.liberta_o_jack();
-    //fechar tudo e mandar msg_content a avisar
-}
+//void Menu::mata_tudo() {
+//    control.liberta_o_jack();
+//    //fechar tudo e mandar msg_content a avisar
+//}

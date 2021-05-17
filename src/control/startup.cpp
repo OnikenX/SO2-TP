@@ -3,8 +3,9 @@
 
 Control::Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
                  SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno)
-        : MAX_AVIOES(max_avioes), MAX_AEROPORTOS(max_aeroportos), shared_memory_handle(shared_memory_handle),
-          view_of_file_pointer(view_of_file_pointer), aceita_avioes(true), mutex_interno(mutex_interno) {}
+        : MAX_AVIOES(max_avioes), MAX_AEROPORTOS(max_aeroportos),
+          shared_memory_handle(shared_memory_handle), view_of_file_pointer(view_of_file_pointer),
+          aceita_avioes(true), mutex_interno(mutex_interno), terminar(false) {}
 
 
 // registry stuff
@@ -72,18 +73,16 @@ std::optional<std::unique_ptr<Control>> Control::create(DWORD max_avioes, DWORD 
     HANDLE hMapFile =
             CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(SharedMemoryMap_control),
                               SHARED_MEMORY_NAME);
-
+    DWORD getlasterror = GetLastError();
     if (hMapFile == NULL) {
-        DWORD getlasterror = GetLastError();
-        if (getlasterror == ERROR_ALREADY_EXISTS) {
-            tcout << t("O Control já existe.") << std::endl;
-        } else {
-            tcout << t("Não foi possivel criar o file mapping por uma razão desconhecida: ")
-                  << getlasterror << std::endl;
-        }
+        tcerr << t("Não foi possivel criar o file mapping por uma razão desconhecida: ")
+              << getlasterror << std::endl;
         return std::nullopt;
     }
-
+    if (getlasterror == ERROR_ALREADY_EXISTS) {
+        tcerr << t("O Control já existe.") << std::endl;
+        return std::nullopt;
+    }
     auto pBuf = (SharedMemoryMap_control *) MapViewOfFile(hMapFile,   // handle to map object
                                                           FILE_MAP_ALL_ACCESS, // read/write permission
                                                           0,
@@ -137,7 +136,7 @@ std::unique_ptr<AviaoSharedObjects_control> AviaoSharedObjects_control::create(u
     TCHAR nome[30];
     //shared memory name
     _stprintf(nome, FM_AVIAO, id_aviao);
-    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
+//    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
     HANDLE filemap = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, nome);
     if (!filemap)
         return nullptr;
@@ -150,16 +149,16 @@ std::unique_ptr<AviaoSharedObjects_control> AviaoSharedObjects_control::create(u
     }
 
     _stprintf(nome, SR_AVIAO, id_aviao);
-    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
+//    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
 
     //shared semafores
     HANDLE semaforo_read = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, nome);
     _stprintf(nome, SW_AVIAO, id_aviao);
-    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
+//    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
 
     HANDLE semaforo_write = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, nome);
     _stprintf(nome, MT_AVIAO, id_aviao);
-    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
+//    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
     HANDLE mutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, nome);
     if (!semaforo_read || !semaforo_write || !mutex) {
         UnmapViewOfFile(sharedMensagemAviao);
@@ -172,6 +171,7 @@ std::unique_ptr<AviaoSharedObjects_control> AviaoSharedObjects_control::create(u
             CloseHandle(semaforo_write);
         return nullptr;
     }
+
     return std::make_unique<AviaoSharedObjects_control>(mutex, semaforo_write, semaforo_read, filemap,
                                                         sharedMensagemAviao);
 }

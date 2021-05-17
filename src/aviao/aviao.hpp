@@ -26,6 +26,7 @@ struct AviaoInstance {
     HANDLE hMapFile;
     //handle da dll
     void *dllHandle;
+    HANDLE Wait_to_Die;
     FARPROC ptr_move_func;
     unsigned long id_do_aeroporto;
     AviaoShare aviao;
@@ -34,7 +35,8 @@ struct AviaoInstance {
     AviaoInstance(const AviaoInstance &) = delete; // non construction-copyable
     AviaoInstance &operator=(const AviaoInstance &) = delete; // non copyable
     AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMemoryMap, void *dllHandle,
-                  AviaoShare av, std::unique_ptr<AviaoSharedObjects_aviao> sharedComs);
+                  AviaoShare av, std::unique_ptr<AviaoSharedObjects_aviao> sharedComs,
+                  unsigned long id_do_aeroporto);
     std::unique_ptr<AviaoSharedObjects_aviao> sharedComs;
     static std::unique_ptr<AviaoInstance> create(AviaoShare av);
     int move(int cur_x, int cur_y, int final_dest_x, int final_dest_y, int *next_x, int *next_y);
