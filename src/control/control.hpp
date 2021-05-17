@@ -4,6 +4,18 @@
 #include <vector>
 #include <unordered_map>
 
+//strutura de assistencia
+struct AviaoSharedObjects_control {
+    AviaoSharedObjects_control(HANDLE mutex, HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
+                               Mensagem_Aviao *sharedMensagemAviao);
+
+    static std::unique_ptr<AviaoSharedObjects_control> create(unsigned long id_aviao);
+
+    HANDLE mutex, semaforo_write, semaforo_read, filemap;
+    Mensagem_Aviao *sharedMensagemAviao;
+
+    ~AviaoSharedObjects_control();
+};
 
 struct Control {
     const DWORD MAX_AVIOES;
@@ -35,25 +47,13 @@ struct Control {
     //verifica se existe um aviao na mesma localizaao
     bool existeAlguem(Mensagem_Control &mensagemControl);
 
-    bool verificaAeroporto_e_insereAviaSeExistir(Mensagem_Control &mensagemControl, Mensagem_Aviao *mensagemAviao);
+    bool verificaAeroporto_e_atualizaSeAviao(Mensagem_Control &mensagemControl, Mensagem_Aviao *mensagemAviao);
 
     Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
             SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno);
 
     std::vector<Aeroporto> aeroportos;
     std::vector<AviaoShare> avioes;
+    std::vector<AviaoSharedObjects_control> avioesSharedObjects;
     bool aceita_avioes;
-};
-
-//strutura de assistencia
-struct AviaoSharedObjects_control {
-    AviaoSharedObjects_control(HANDLE mutex, HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
-                               Mensagem_Aviao *sharedMensagemAviao);
-
-    static std::unique_ptr<AviaoSharedObjects_control> create(unsigned long id_aviao);
-
-    HANDLE mutex, semaforo_write, semaforo_read, filemap;
-    Mensagem_Aviao *sharedMensagemAviao;
-
-    ~AviaoSharedObjects_control();
 };

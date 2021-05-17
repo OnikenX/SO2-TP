@@ -12,11 +12,11 @@ bool sendMessage(unsigned long id_aviao, Mensagem_Aviao &mensagemAviao) {
     auto coms = AviaoSharedObjects_control::create(id_aviao);
     if (!coms)
         return false;
-    _tprintf(t("Boas.....\n"));
+
     WaitForSingleObject(coms->semaforo_write, INFINITE);
     WaitForSingleObject(coms->mutex, INFINITE);
 
-    CopyMemory(&coms->sharedMensagemAviao, &mensagemAviao, sizeof(Mensagem_Aviao));
+    CopyMemory(coms->sharedMensagemAviao, &mensagemAviao, sizeof(Mensagem_Aviao));
 
     ReleaseMutex(coms->mutex);
     ReleaseSemaphore(coms->semaforo_read, 1, nullptr);
@@ -26,29 +26,15 @@ bool sendMessage(unsigned long id_aviao, Mensagem_Aviao &mensagemAviao) {
 #endif
     return true;
 }
-/*
-auto Control::existeAeroporto(Mensagem_Control &mensagemControl){
-    auto guard = GuardLock(mutex_interno);
-    auto result = std::find_if(std::begin(aeroportos), std::end(aeroportos), [&](Aeroporto& a) {
-        if( a.IDAero == mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto){
-            avioes.push_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av);
-            return true;
-        }
-    });
-    return false;
-}*/
 
-//verifica se o aeroporto existe
-//se é passado o argumento do mensagemAviao e metido o aviao da mensagem no vetor
 bool
-Control::verificaAeroporto_e_insereAviaSeExistir(Mensagem_Control &mensagemControl, Mensagem_Aviao *mensagemAviao) {
+Control::verificaAeroporto_e_atualizaSeAviao(Mensagem_Control &mensagemControl, Mensagem_Aviao *mensagemAviao) {
     auto guard = GuardLock(mutex_interno);
     auto result = std::find_if(std::begin(aeroportos), std::end(aeroportos), [&](Aeroporto &a) {
         return a.IDAero == mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto;
     });
     if (result != std::end(aeroportos)) {
         if (mensagemAviao) {
-            avioes.push_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av);
             mensagemAviao->msg_content.respostaNovasCoordenadas.y = result->pos.y;
             mensagemAviao->msg_content.respostaNovasCoordenadas.x = result->pos.x;
         }
@@ -62,19 +48,22 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
     Mensagem_Aviao mensagemAviao{};
 
     //nao encontrou o aeroporto
-    if (control.verificaAeroporto_e_insereAviaSeExistir(mensagemControl, NULL)) {
-        mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_existe;
+    if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, NULL)) {
+        control.avioes.push_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av);
+        mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_nao_existe;
     } else {
         mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_nao_existe;
     }
+
     if (!sendMessage(mensagemControl.id_aviao, mensagemAviao))
         tcerr << t("Aviao n tem as suas cenas setadas") << std::endl;
+
 }
 
 void novoDestino(Control &control, Mensagem_Control &mensagemControl) {
     Mensagem_Aviao mensagemAviao{};
 
-    if (control.verificaAeroporto_e_insereAviaSeExistir(mensagemControl, &mensagemAviao)) {
+    if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, &mensagemAviao)) {
         mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_existe;
 
     } else {

@@ -5,8 +5,8 @@ Menu::Menu(Control &control) : control(control), counter_avioes(0), counter_aero
 
 
 void Menu::run() {
-    TCHAR op[25];
     bool exit = false;
+    int input = -1;
     do {
         tcout << t("\nO que deseja fazer?\n");
         tcout << t("*********************************") << std::endl;
@@ -29,7 +29,6 @@ void Menu::run() {
 
         tcout << t("> ");
         tcout.flush();
-        int input = -1;
         if (input == 0) {
             tcout << t("Por favor insira um numero positivo entre 1 a 6 > ");
             tcout.flush();
@@ -71,14 +70,18 @@ void Menu::run() {
     } while (!exit);
 }
 
-void Menu::cria_aeroporto() {
-    {
-        auto guard = GuardLock(control.mutex_interno);
-        if (this->control.MAX_AEROPORTOS <= this->counter_aeroporto) {
-            tcout << t("Já foi atingido o limite de Aeroportos possiveis") << std::endl;
-            return;
-        }
+bool verificaMaxAeroportos(Menu* isto){
+    auto guard = GuardLock(isto->control.mutex_interno);
+    if (isto->control.MAX_AEROPORTOS <= isto->counter_aeroporto) {
+        tcout << t("Já foi atingido o limite de Aeroportos possiveis") << std::endl;
+        return false;
     }
+    return true;
+}
+
+void Menu::cria_aeroporto() {
+    if(!verificaMaxAeroportos(this))
+        return;
     Aeroporto a;
     tcout << t("Insira as Coordenadas do novo Aeroporto:") << std::endl;
     bool aeroporto_near;

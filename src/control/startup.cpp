@@ -160,7 +160,6 @@ std::unique_ptr<AviaoSharedObjects_control> AviaoSharedObjects_control::create(u
     HANDLE semaforo_write = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, nome);
     _stprintf(nome, MT_AVIAO, id_aviao);
     tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
-
     HANDLE mutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, nome);
     if (!semaforo_read || !semaforo_write || !mutex) {
         UnmapViewOfFile(sharedMensagemAviao);

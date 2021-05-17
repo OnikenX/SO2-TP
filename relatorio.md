@@ -13,4 +13,15 @@ o aviao e o control tem um sistema de comunicacão simples, o control inicia na 
 
 # Control
 
+```cpp
+int code = 5;
+
+```
+`\`
+`boas`
+
+- ya
+- top
+
+
 

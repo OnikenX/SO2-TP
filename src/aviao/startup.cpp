@@ -135,8 +135,6 @@ bool AviaoInstance::verifica_criacao_com_control() {
         tcerr << t("[ERRO]: Criação não foi aceite! Causa: ") << causa << std::endl;
         return false;
     }
-
-
 }
 
 std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create(unsigned long id_aviao) {
@@ -155,20 +153,18 @@ std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create(unsig
         CloseHandle(filemap);
         return nullptr;
     }
-
+    HANDLE mutex_em_andamento = CreateMutex(nullptr, FALSE, nullptr);
     HANDLE mutex_mensagens = CreateMutex(nullptr, FALSE, nullptr);
     _stprintf(nome, SR_AVIAO, id_aviao);
     tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
-
     HANDLE semaforo_read = CreateSemaphore(nullptr, 0, 1, nome);
     _stprintf(nome, SW_AVIAO, id_aviao);
     tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
-
     HANDLE semaforo_write = CreateSemaphore(nullptr, 1, 1, nome);
     _stprintf(nome, MT_AVIAO, id_aviao);
     tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
     HANDLE mutex_produtores = CreateMutex(nullptr, FALSE, nome);
-    if (!semaforo_read || !semaforo_write || !mutex_produtores || !mutex_mensagens) {
+    if (!semaforo_read || !semaforo_write || !mutex_produtores || !mutex_mensagens || !mutex_em_andamento) {
         UnmapViewOfFile(sharedMensagemAviao);
         CloseHandle(filemap);
         if (mutex_produtores)
@@ -179,20 +175,21 @@ std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create(unsig
             CloseHandle(semaforo_read);
         if (semaforo_write)
             CloseHandle(semaforo_write);
-
+        if(mutex_em_andamento)
+            CloseHandle(mutex_em_andamento);
         return nullptr;
     }
 
     return std::make_unique<AviaoSharedObjects_aviao>(mutex_mensagens, mutex_produtores, semaforo_write, semaforo_read,
                                                       filemap,
-                                                      sharedMensagemAviao);
+                                                      sharedMensagemAviao, mutex_em_andamento);
 }
 
 AviaoSharedObjects_aviao::AviaoSharedObjects_aviao(HANDLE mutex_mensagens, HANDLE mutex_produtor,
                                                    HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
-                                                   Mensagem_Aviao *sharedMensagemAviao)
+                                                   Mensagem_Aviao *sharedMensagemAviao, HANDLE mutex_em_andamento)
         : mutex_produtor(mutex_produtor), semaforo_write(semaforo_write), semaforo_read(semaforo_read),
-          filemap(filemap), sharedMensagemAviao(sharedMensagemAviao), mutex_mensagens(mutex_mensagens) {}
+          filemap(filemap), sharedMensagemAviao(sharedMensagemAviao), mutex_mensagens(mutex_mensagens), mutex_em_andamento(mutex_em_andamento) {}
 
 AviaoSharedObjects_aviao::~AviaoSharedObjects_aviao() {
 #ifdef _DEBUG
