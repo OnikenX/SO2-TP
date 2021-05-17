@@ -62,11 +62,11 @@ bool Control::setup_do_registry(DWORD &max_avioes, DWORD &max_aeroportos) {
 }
 
 
-std::optional<std::unique_ptr<Control>> Control::create(DWORD max_avioes, DWORD max_aeroportos) {
+std::unique_ptr<Control> Control::create(DWORD max_avioes, DWORD max_aeroportos) {
 
     if (!SharedLocks::get()) {
         tcerr << t("Erro a criar mutex_produtor e semaforos partilhados.") << std::endl;
-        return std::nullopt;
+        return nullptr;
     }
 
     //cria se um file maping
@@ -77,11 +77,11 @@ std::optional<std::unique_ptr<Control>> Control::create(DWORD max_avioes, DWORD 
     if (hMapFile == NULL) {
         tcerr << t("Não foi possivel criar o file mapping por uma razão desconhecida: ")
               << getlasterror << std::endl;
-        return std::nullopt;
+        return nullptr;
     }
     if (getlasterror == ERROR_ALREADY_EXISTS) {
         tcerr << t("O Control já existe.") << std::endl;
-        return std::nullopt;
+        return nullptr;
     }
     auto pBuf = (SharedMemoryMap_control *) MapViewOfFile(hMapFile,   // handle to map object
                                                           FILE_MAP_ALL_ACCESS, // read/write permission
@@ -94,25 +94,26 @@ std::optional<std::unique_ptr<Control>> Control::create(DWORD max_avioes, DWORD 
         _tprintf(TEXT("Could not map view of file (%d).\n"),
                  GetLastError());
         CloseHandle(hMapFile);
-        return std::nullopt;
+        return nullptr;
     }
 
     HANDLE mutex_interno = CreateMutex(nullptr, FALSE, nullptr);
     if (mutex_interno == nullptr) {
         CloseHandle(hMapFile);
         UnmapViewOfFile(pBuf);
+        return nullptr;
     }
 
     if (!setup_do_registry(max_avioes, max_aeroportos)) {
         CloseHandle(hMapFile);
         UnmapViewOfFile(pBuf);
         CloseHandle(mutex_interno);
-        return std::nullopt;
+        return nullptr;
     }
 
     // a razão para usar o unique pointer é para que o compilar n esteja a chamar o contrutor ou o descontrutor desnecessariamente
     // com um unique pointer certificamo nos que n existem copias descessarias do Control ou referencias para ele
-    return std::optional(std::make_unique<Control>(max_avioes, max_aeroportos, hMapFile, pBuf, mutex_interno));
+    return std::move(std::make_unique<Control>(max_avioes, max_aeroportos, hMapFile, pBuf, mutex_interno));
 }
 
 void Control::liberta_o_jack() {

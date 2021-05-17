@@ -47,8 +47,10 @@ Control::verificaAeroporto_e_atualizaSeAviao(Mensagem_Control &mensagemControl, 
 
 void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
     Mensagem_Aviao mensagemAviao{};
+#ifdef _DEBUG
     tcout << t("[DEBUG]: Recebido pedido de novo aviao para o aeroporto ")
           << mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto << std::endl;
+#endif
     //nao encontrou o aeroporto
     if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, NULL)) {
         control.avioes.push_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av);
@@ -71,8 +73,7 @@ void novoDestino(Control &control, Mensagem_Control &mensagemControl) {
     Mensagem_Aviao mensagemAviao{};
 
     if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, &mensagemAviao)) {
-        mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_existe;
-
+        mensagemAviao.resposta_type = Mensagem_resposta::lol_ok;
     } else {
         mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_nao_existe;
     }
@@ -173,10 +174,31 @@ DWORD WINAPI ThreadReadBuffer(LPVOID param) {
     return 1;
 }
 
+void limpaAntigos(Control &control){
+
+}
+
+[[noreturn]] DWORD WINAPI VerifyValues(LPVOID param){
+    Control&control = *(Control*)param;
+    while(true){
+        Sleep(1000);
+
+
+    }
+
+}
+
+//O Nuno Esteve Aqui as 6h30!!!
 int Control::run() {
     auto menu = std::make_unique<Menu>(*this);
+    //thread de leitura do buffer circular
     CreateThread(NULL, 0, ThreadReadBuffer, this, 0, NULL);
+
+    //thread da
+    CreateThread(nullptr, 0, VerifyValues, this, 0 , nullptr);
+    //menu do control
     WaitForSingleObject(CreateThread(NULL, 0, ThreadMenu, menu.get(), 0, NULL),INFINITE);
+
     return 0;
 }
 

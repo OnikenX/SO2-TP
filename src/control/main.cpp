@@ -13,11 +13,11 @@ int _tmain() {
         _setmode(_fileno(stderr), _O_WTEXT);
 #endif
 #endif
-        auto control_create = Control::create();
-        if (!control_create.has_value())
+        auto control = Control::create();
+        if (!control){
             tcout << t("Control não pode ser criado.") << std::endl;
-        auto control = std::move(control_create.value());
-
+            return ERRO_CONTROL_NAO_EXISTE;
+        }
         int return_control = control->run();
         if (return_control != 0) {
             tcout << t("Erro ") << return_control << t(" a correr o control.") << std::endl;

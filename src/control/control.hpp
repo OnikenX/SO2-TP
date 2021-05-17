@@ -25,7 +25,7 @@ struct Control {
     HANDLE mutex_interno;
 
     // caso exista problemas a criar o control o optional não ira retornar um control
-    static std::optional<std::unique_ptr<Control>> create(DWORD max_avioes = 50, DWORD max_aeroportos = 10);
+    static std::unique_ptr<Control> create(DWORD max_avioes = 50, DWORD max_aeroportos = 10);
 
     // main function do control
     int run();

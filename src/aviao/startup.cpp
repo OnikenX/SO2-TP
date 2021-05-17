@@ -124,7 +124,7 @@ bool AviaoInstance::verifica_criacao_com_control() {
 #endif
         return true;
     } else {
-        tstring causa = "";
+        tstring causa = t("");
         switch (resposta->resposta_type) {
             case aeroporto_nao_existe:
                 causa = t("aeroporto_nao_existe");

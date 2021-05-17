@@ -38,8 +38,6 @@
 #define SHARED_MEMORY_NAME t("SO2_TP_SHARED_MEMORY")
 #define SEMAFORO_READ_CONTROL_AVIAO t("SO2_TP_SEMAFORO_READ_CONTROL_AVIAO")
 #define SEMAFORO_WRITE_CONTROL_AVIAO t("SO2_TP_SEMAFORO_WRITE_CONTROL_AVIAO")
-#define SEMAFORO_READ_AVIAO_CONTROL t("SO2_TP_SEMAFORO_READ_AVIAO_CONTROL")
-#define SEMAFORO_WRITE_AVIAO_CONTROL t("SO2_TP_SEMAFORO_WRITE_AVIAO_CONTROL")
 #define MUTEX_PARTILHADO t("SO2_TP_MUTEX_PARTINHADO_BUFFER")
 #define EVENT_KILLER t("Nos_Vamos_Todos_Falecer")
 #define FM_AVIAO t("S02_TP_FM_%lu")
@@ -81,7 +79,6 @@ private:
 #define ERRO_AVIAO_NAO_FOI_CRIADO 4
 
 //structs partilhadas
-
 struct Cords {
     int x;
     int y;
@@ -101,25 +98,6 @@ struct Aeroporto {
     TCHAR nome[MAX_LENGTH_NAME_AEROPORTO];
     unsigned long IDAero;
 };
-/*
-struct Buffer_Circular{
-    AviaoInstance av[10];
-    int posE; //proxima posicao de escrita
-    int posL; //proxima posicao de leitura
-    int nProdutores;
-    int nConsumidores;
-
-};
-
-struct Passa_Thread{
-    Buffer_Circular* bc;
-    HANDLE hWrite;
-    HANDLE hRead;
-    int terminar;
-};
-
-*/
-
 
 enum Mensagem_types{
     confirmar_novo_aviao,
@@ -147,7 +125,6 @@ union Mensagem_Control_union{
     Pedido_info_aeroporto pedidoConfirmarNovoAviao;
     Pedido_mover pedidoConfirmarMovimento;
 
-
 };
 
 
@@ -170,12 +147,12 @@ union Mensagem_Aviao_union{
 
 };
 enum Mensagem_resposta{
-    lol_ok,
-    movimento_fail,
-    kill_me,
-    aeroporto_existe,
-    aeroporto_nao_existe
-    //aviao_existe
+    lol_ok,//mensagem de confirmação/OK
+    movimento_fail,// nao pode fazer movimento x
+    kill_me,//suicinho quentinho
+    aeroporto_nao_existe,//precisas de um dicionario?
+    MAX_Atingido,//max power
+    Porta_Fechada//cant enter, cant go
 };
 
 
@@ -200,25 +177,10 @@ struct SharedMemoryMap_control {
     SharedMemoryMap_control();
 };
 
-
-//struct DadosThreads {
-//    SharedMemoryMap_control *memPar; //ponteiro para a memoria partilhada
-//    HANDLE hSemEscrita; //handle para o semaforo que controla as escritas (controla quantas posicoes estao vazias)
-//    HANDLE hSemLeitura; //handle para o semaforo que controla as leituras (controla quantas posicoes estao preenchidas)
-//    HANDLE hMutex;
-//    int terminar; // 1 para sair, 0 em caso contr�rio
-//    int id;
-//};
-
-
 struct GuardLock {
     ~GuardLock();
     HANDLE mutex;
     GuardLock(HANDLE _mutex);
     GuardLock(GuardLock&& guard);
 };
-
-
-
-
 

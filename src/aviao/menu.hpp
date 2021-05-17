@@ -12,7 +12,6 @@ public:
 private:
     int counter_aeroporto;
     AviaoInstance& aviaoInstance;
-    HANDLE mutex_em_andamento;
     void novas_cords();
     void inicia_voo();
     void suicidio();

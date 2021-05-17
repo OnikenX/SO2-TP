@@ -40,22 +40,24 @@ void Menu::run() {
         switch (input) {
 
             case 9:
-                    suicidio();
-                    exit = true;
-                    break;
+                suicidio();
+                exit = true;
+                break;
 
             case 1:
 
-                    novas_cords();
-                    break;
+                novas_cords();
+                break;
 
 
             case 2:
 
-                    inicia_voo();
-                    if(aviaoInstance.em_andamento)
-                        exit = true;
-                    break;
+                inicia_voo();
+                WaitForSingleObject(this->aviaoInstance.sharedComs->mutex_em_andamento, INFINITE);
+                if (aviaoInstance.em_andamento)
+                    exit = true;
+                ReleaseMutex(this->aviaoInstance.sharedComs->mutex_em_andamento);
+                break;
 
 
             default:
@@ -74,6 +76,7 @@ void Menu::novas_cords() {
     Mensagem_Control mc;
     mc.type = novo_destino;
     mc.id_aviao = aviaoInstance.aviao.IDAv;
+    mc.mensagem.pedidoConfirmarNovoAviao.id_aeroporto = idAero;
     std::unique_ptr<Mensagem_Aviao> resposta = aviaoInstance.sendMessage(true, mc);
     if (resposta->resposta_type == aeroporto_existe) {
         aviaoInstance.aviao.PosDest.x = resposta->msg_content.respostaNovasCoordenadas.x;
@@ -109,14 +112,16 @@ DWORD WINAPI ThreadVoa(LPVOID param) {
 
             tcout << t("X: ") << aviao.aviao.PosA.x << t("\tY: ") << aviao.aviao.PosA.y << t("\t\t X: ")
                   << aviao.aviao.PosDest.x << t("\tY: ") << aviao.aviao.PosDest.y << std::endl;
-
-
             if (cond == 0) {
                 break;
             }
         }
         Sleep(1000);
     } while (cond != 0);
+    WaitForSingleObject(aviao.sharedComs->mutex_em_andamento, INFINITE);
+    aviao.em_andamento = false;
+    ReleaseMutex(aviao.sharedComs->mutex_em_andamento);
+    tcout << t("Chegou vivo ao seu destino, clique em qualquer botão para voltar ao menu inicial.") << std::endl;
 
     return 1;
 
@@ -128,10 +133,16 @@ void Menu::inicia_voo() {
         tcout << t("Não é muito interessante voar para onde já esta") << std::endl;
         return;
     }
+    WaitForSingleObject(this->aviaoInstance.sharedComs->mutex_em_andamento, INFINITE);
     aviaoInstance.em_andamento = true;
+    ReleaseMutex(this->aviaoInstance.sharedComs->mutex_em_andamento);
+    tcout << t("A voar, clique em qualquer tecla para !viver.");
+    CreateThread(nullptr, 0, ThreadVoa, &aviaoInstance, 0, nullptr);
+    while(tcin.get()!=t(" ")[0]);
+#ifdef _DEBUG
+    tcout << t("[DEBUG]: O botao foi clicado.(se estiveres em voo, es um ganda nabo).")<< std::endl;
+#endif
 
-    HANDLE Voa_Passarinho = CreateThread(nullptr, 0, ThreadVoa, &aviaoInstance, 0, nullptr);
-    tcin.get();
 }
 
 
