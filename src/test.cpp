@@ -33,8 +33,9 @@
 #include <WINDOWS.h>
 
 int main() {
-    HANDLE handle1 , handle2, handle3;
-    HANDLE threads[] ={handle1 };
-    int nThreads = sizeof(threads)/sizeof(HANDLE);
-    std::cout << "nthreads : " << nThreads << std::endl;
+    int values[] = {21, 23, 55, 43};
+    auto it = std::rbegin(values);
+    while (it != std::rend(values))
+        std::cout << *it  << " " << (std::rend(values)-1 - it++)<< std::endl;
+
 }

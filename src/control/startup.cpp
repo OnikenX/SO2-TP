@@ -1,4 +1,5 @@
 #include "control.hpp"
+#include "shared_control_aviao.hpp"
 //funções do control que servem de inicialização
 
 Control::Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
@@ -46,7 +47,7 @@ bool cria_chaves(DWORD &max_avioes, DWORD &max_aeroportos) {
                       (LPCBYTE) &max_avioes, sizeof(DWORD)) != ERROR_SUCCESS ||
         RegSetValueEx(chave, par_nome_max_aeroportos, 0, RRF_RT_ANY,
                       (LPCBYTE) &max_aeroportos, sizeof(DWORD)) != ERROR_SUCCESS) {
-        tcerr << t("Erro a dar valores das chaves.");
+        tcerr << t("Erro a dar valores das chaves.") << std::endl;
         return_value = false;
     }
     RegCloseKey(chave);
@@ -64,7 +65,7 @@ bool Control::setup_do_registry(DWORD &max_avioes, DWORD &max_aeroportos) {
 
 std::unique_ptr<Control> Control::create(DWORD max_avioes, DWORD max_aeroportos) {
 
-    if (!SharedLocks::get()) {
+    if (!shared_control_aviao::get()) {
         tcerr << t("Erro a criar mutex_produtor e semaforos partilhados.") << std::endl;
         return nullptr;
     }
@@ -117,7 +118,7 @@ std::unique_ptr<Control> Control::create(DWORD max_avioes, DWORD max_aeroportos)
 }
 
 void Control::liberta_o_jack() {
-    SetEvent(SharedLocks::get()->evento_JackTheReaper);
+    SetEvent(shared_control_aviao::get()->evento_JackTheReaper);
     auto guard = GuardLock(mutex_interno);
     terminar = true;
     tcout << t("Isto é o Big Crunch deste universo, foi um prazer poder viajar consigo") << std::endl;
@@ -133,20 +134,20 @@ Control::~Control() {
 }
 
 
-std::unique_ptr<AviaoSharedObjects_control> AviaoSharedObjects_control::create(unsigned long id_aviao) {
+std::optional<AviaoSharedObjects_control> AviaoSharedObjects_control::create(unsigned long id_aviao) {
     TCHAR nome[30];
     //shared memory name
     _stprintf(nome, FM_AVIAO, id_aviao);
 //    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
     HANDLE filemap = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, nome);
     if (!filemap)
-        return nullptr;
+        return std::nullopt;
     auto sharedMensagemAviao =
             (Mensagem_Aviao *) MapViewOfFile(filemap, FILE_MAP_ALL_ACCESS,
                                              0, 0, sizeof(Mensagem_Aviao));
     if (!sharedMensagemAviao) {
         CloseHandle(filemap);
-        return nullptr;
+        return std::nullopt;
     }
 
     _stprintf(nome, SR_AVIAO, id_aviao);
@@ -170,28 +171,36 @@ std::unique_ptr<AviaoSharedObjects_control> AviaoSharedObjects_control::create(u
             CloseHandle(semaforo_read);
         if (semaforo_write)
             CloseHandle(semaforo_write);
-        return nullptr;
+        return std::nullopt;
     }
 
-    return std::make_unique<AviaoSharedObjects_control>(mutex, semaforo_write, semaforo_read, filemap,
-                                                        sharedMensagemAviao);
+    return AviaoSharedObjects_control(mutex, semaforo_write, semaforo_read, filemap,
+                                      sharedMensagemAviao);
 }
 
 AviaoSharedObjects_control::AviaoSharedObjects_control(HANDLE mutex, HANDLE semaforo_write, HANDLE semaforo_read,
                                                        HANDLE filemap, Mensagem_Aviao *sharedMensagemAviao)
         : mutex(mutex), semaforo_write(semaforo_write), semaforo_read(semaforo_read),
-          filemap(filemap), sharedMensagemAviao(sharedMensagemAviao) {}
+          filemap(filemap), sharedMensagemAviao(sharedMensagemAviao), deleted(false) {}
 
 AviaoSharedObjects_control::~AviaoSharedObjects_control() {
 #ifdef _DEBUG
     tcout << t("[DEBUG]: Destroing AviaoSharedObjects_control...") << std::endl;
 #endif
-    UnmapViewOfFile(sharedMensagemAviao);
-    CloseHandle(filemap);
-    if (mutex)
-        CloseHandle(mutex);
-    if (semaforo_read)
-        CloseHandle(semaforo_read);
-    if (semaforo_write)
-        CloseHandle(semaforo_write);
+    if (!deleted) {
+        UnmapViewOfFile(sharedMensagemAviao);
+        CloseHandle(filemap);
+        if (mutex)
+            CloseHandle(mutex);
+        if (semaforo_read)
+            CloseHandle(semaforo_read);
+        if (semaforo_write)
+            CloseHandle(semaforo_write);
+    }
+}
+
+AviaoSharedObjects_control::AviaoSharedObjects_control(AviaoSharedObjects_control &&other)
+        : mutex(other.mutex), semaforo_write(other.semaforo_write), semaforo_read(other.semaforo_read),
+          filemap(other.filemap), sharedMensagemAviao(other.sharedMensagemAviao), deleted(false) {
+    other.deleted = true;
 }

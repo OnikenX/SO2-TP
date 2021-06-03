@@ -1,4 +1,6 @@
 #include "aviao.hpp"
+#include "shared_control_aviao.hpp"
+
 //funções do control que servem de inicialização
 
 
@@ -30,12 +32,15 @@ void shared_memory_verification(HANDLE &hMapFile, SharedMemoryMap_control *&pBuf
 HMODULE getdll() {
     const int nSize = 255;
     TCHAR path[nSize] = t("");
-    HMODULE hdll = LoadLibraryEx(t("SO2_TP_DLL_2021.dll"), nullptr, 0);
+    GetCurrentDirectory(nSize,path);
+    TCHAR dllFileName[] = t("SO2_TP_DLL_2021.dll");
+//    tcerr << t("Current working directory: ") << dllFileName << std::endl;
+    HMODULE hdll = LoadLibraryEx(dllFileName, nullptr, 0);
     if (hdll == nullptr) {
-        GetModuleFileName(nullptr, path, nSize);
         tcerr <<
-              t("Não encontrei a dll SO2_TP_DLL_2021.dll, por favor insira a em: ")
+              t("Não encontrei a dll SO2_TP_DLL_2021.dll, por favor insire a em : ")
               << path << std::endl;
+
         return nullptr;
     }
     return hdll;
@@ -53,7 +58,7 @@ AviaoInstance::create(AviaoShare av) {
         return nullptr;
     }
 
-    if (!SharedLocks::get()) {
+    if (!shared_control_aviao::get()) {
         tcerr << t("Erro a criar mutex_produtor e semaforos partilhados para o controller.") << std::endl;
         return nullptr;
     }

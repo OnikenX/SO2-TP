@@ -8,13 +8,25 @@
 struct AviaoSharedObjects_control {
     AviaoSharedObjects_control(HANDLE mutex, HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
                                Mensagem_Aviao *sharedMensagemAviao);
+    AviaoSharedObjects_control(AviaoSharedObjects_control&& aviaoSharedObjectsControl);
+    static std::optional<AviaoSharedObjects_control> create(unsigned long id_aviao);
 
-    static std::unique_ptr<AviaoSharedObjects_control> create(unsigned long id_aviao);
-
+    AviaoSharedObjects_control(const AviaoSharedObjects_control &) = default; // non construction-copyable
+    AviaoSharedObjects_control &operator=(const AviaoSharedObjects_control &) = delete; // non copyable
     HANDLE mutex, semaforo_write, semaforo_read, filemap;
     Mensagem_Aviao *sharedMensagemAviao;
 
     ~AviaoSharedObjects_control();
+
+private:
+    bool deleted;
+};
+
+struct aviao_in_controlstorage : AviaoShare{
+    aviao_in_controlstorage(AviaoShare share, AviaoSharedObjects_control &&coms);
+    AviaoSharedObjects_control coms;
+    std::chrono::time_point<std::chrono::steady_clock> updated;
+    void update_time();
 };
 
 struct Control {
@@ -53,7 +65,7 @@ struct Control {
             SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno);
 
     std::vector<Aeroporto> aeroportos;
-    std::vector<AviaoShare> avioes;
-    std::vector<AviaoSharedObjects_control> avioesSharedObjects;
+
+    std::list<aviao_in_controlstorage> avioes;
     bool aceita_avioes;
 };

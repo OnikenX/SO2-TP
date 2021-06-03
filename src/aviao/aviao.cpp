@@ -3,6 +3,14 @@
 
 #include "aviao.hpp"
 #include "menu.hpp"
+#include "shared_control_aviao.hpp"
+
+#ifndef _WIN64
+#pragma message("[WARNING]: A compilação não está a ser feita em 64bit Windows,\
+a dll que vem com este programa é só para 64bit windows.")
+#pragma message("[WARNING]: Porfavor modifique as configurações de compilação para 64bit\
+ou use utilize uma dll de 32bit se quer usar o programa em 32bits.")
+#endif
 
 //novo destino
 //iniciar voo
@@ -32,8 +40,8 @@ std::unique_ptr<Mensagem_Aviao> AviaoInstance::sendMessage(bool recebeResposta, 
     //nao deixa ninguem enviar mensagens ao mesmo tempo na mesma thread
     auto guard = GuardLock(this->sharedComs->mutex_mensagens);
 
-    WaitForSingleObject(SharedLocks::get()->semaforo_write_control_aviao, INFINITE);
-    WaitForSingleObject(SharedLocks::get()->mutex_partilhado, INFINITE);
+    WaitForSingleObject(shared_control_aviao::get()->semaforo_write_control_aviao, INFINITE);
+    WaitForSingleObject(shared_control_aviao::get()->mutex_partilhado, INFINITE);
 
     CopyMemory(&this->sharedMemoryMap->buffer_mensagens_control[this->sharedMemoryMap->posWriter], &mensagemControl, sizeof(Mensagem_Control));
     this->sharedMemoryMap->posWriter++;
@@ -41,8 +49,8 @@ std::unique_ptr<Mensagem_Aviao> AviaoInstance::sendMessage(bool recebeResposta, 
     if(this->sharedMemoryMap->posWriter == CIRCULAR_BUFFERS_SIZE)
         this->sharedMemoryMap->posWriter = 0;
 
-    ReleaseMutex(SharedLocks::get()->mutex_partilhado);
-    ReleaseSemaphore(SharedLocks::get()->semaforo_read_control_aviao, 1, nullptr);
+    ReleaseMutex(shared_control_aviao::get()->mutex_partilhado);
+    ReleaseSemaphore(shared_control_aviao::get()->semaforo_read_control_aviao, 1, nullptr);
 #ifdef _DEBUG
     tcout << t("[DEBUG]: Mensagem enviada") << std::endl;
 #endif

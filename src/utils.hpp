@@ -45,29 +45,6 @@
 #define SR_AVIAO t("S02_TP_SR_%lu")
 #define MT_AVIAO t("S02_TP_MT_%lu")
 
-struct SharedLocks {
-    HANDLE semaforo_read_control_aviao;
-    HANDLE semaforo_write_control_aviao;
-    HANDLE mutex_partilhado;
-    HANDLE evento_JackTheReaper;
-    static SharedLocks *get();
-
-    //define se o singleton acabou de ser criado
-    bool firsttime;
-    bool erros;
-
-    SharedLocks(const SharedLocks &) = delete; // non construction-copyable
-    SharedLocks &operator=(const SharedLocks &) = delete; // non copyable
-    ~SharedLocks();
-
-    SharedLocks();
-
-private:
-    void closeall();
-};
-
-
-
 #define CIRCULAR_BUFFERS_SIZE 50
 
 #define MAX_LENGTH_NAME_AEROPORTO 30
@@ -91,7 +68,6 @@ struct AviaoShare {
     int velocidade;
     Cords PosA;
     Cords PosDest;
-    long long update;
 };
 
 struct Aeroporto {
