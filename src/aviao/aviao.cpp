@@ -83,7 +83,7 @@ std::unique_ptr<Mensagem_Aviao> AviaoInstance::sendMessage(bool recebeResposta, 
 #ifdef _DEBUG
         tcout << t("[Debug]: Ping...") << std::endl;
 #endif
-        Sleep(1000);
+        Sleep(500);
     }
 }
 

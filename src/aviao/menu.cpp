@@ -8,6 +8,7 @@ void Menu::run() {
     TCHAR op[25];
     //bool em_voo=false;
     aviaoInstance.em_andamento = false;
+    tstring line_input;
     bool exit = false;
     do {
         //O Nuno Esteve aqui as 5 da manhã!!!
@@ -30,9 +31,11 @@ void Menu::run() {
         }
         try {
             do {
-                tcin >> input;
+                std::getline(tcin, line_input);
+                std::basic_stringstream<TCHAR> sstream(line_input);
+                sstream >> input;
             } while (input <= 0);
-        } catch (std::exception e) {
+        } catch (std::exception &e) {
             tcout << e.what();
             break;
         }
@@ -71,8 +74,11 @@ void Menu::run() {
 
 void Menu::novas_cords() {
     int idAero;
+    tstring line_input;
     tcout << t("Insira o ID do Aeroporto distino:") << std::endl;
-    tcin >> idAero;
+    std::getline(tcin, line_input);
+    std::basic_stringstream<TCHAR> sstream(line_input);
+    sstream >> idAero;
     Mensagem_Control mc;
     mc.type = novo_destino;
     mc.id_aviao = aviaoInstance.aviao.IDAv;
@@ -142,9 +148,9 @@ void Menu::inicia_voo() {
     ReleaseMutex(this->aviaoInstance.sharedComs->mutex_em_andamento);
     tcout << t("A voar, clique em qualquer tecla para !viver.");
     CreateThread(nullptr, 0, ThreadVoa, &aviaoInstance, 0, nullptr);
-    while(tcin.get()!=t(" ")[0]);
+    while (tcin.get() != t(" ")[0]);
 #ifdef _DEBUG
-    tcout << t("[DEBUG]: O botao foi clicado.(se estiveres em voo, es um ganda nabo).")<< std::endl;
+    tcout << t("[DEBUG]: O botao foi clicado.(se estiveres em voo, es um ganda nabo).") << std::endl;
 #endif
 
 }

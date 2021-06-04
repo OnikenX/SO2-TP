@@ -65,7 +65,6 @@ struct Control {
             SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno);
 
     std::vector<Aeroporto> aeroportos;
-
     std::list<aviao_in_controlstorage> avioes;
     bool aceita_avioes;
 };

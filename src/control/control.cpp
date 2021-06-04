@@ -23,13 +23,18 @@ void sendMessage(const AviaoSharedObjects_control &coms, Mensagem_Aviao &mensage
 }
 
 void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Aviao &mensagemAviao) {
-    auto aviao = std::find_if(control.avioes.begin(), control.avioes.end(),
-                              [&](aviao_in_controlstorage &aviaoShareWithComs) {
-                                  return aviaoShareWithComs.IDAv == id_aviao;
-                              });
-    if (aviao == control.avioes.end()) {
-        tcerr << "[ERROR]: O aviao " << id_aviao << " ainda não esta registado." << std::endl;
-        return;
+    auto aviao = control.avioes.begin();
+    {
+        auto guard = GuardLock(control.mutex_interno);
+        aviao = std::find_if(control.avioes.begin(), control.avioes.end(),
+                             [&](aviao_in_controlstorage &aviaoShareWithComs) {
+                                 return aviaoShareWithComs.IDAv == id_aviao;
+                             });
+        if (aviao == control.avioes.end()) {
+            tcerr << "[ERROR]: O aviao " << id_aviao << " ainda não esta registado." << std::endl;
+            return;
+        }
+        aviao->update_time();
     }
     sendMessage(aviao->coms, mensagemAviao);
 }
@@ -64,7 +69,7 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
     //nao encontrou o aeroporto
     if (!coms.has_value()) {
 #ifdef _DEBUG
-        tcerr << t("[DEBUG]: Não tenho acesso as comunicações do avião ") << mensagemControl.id_aviao << std::endl;
+        tcerr << t("[DEBUG]: Não tenho acesso as comunicações do avião.") << mensagemControl.id_aviao << std::endl;
 #endif
         HANDLE process = OpenProcess(PROCESS_TERMINATE, FALSE, mensagemControl.id_aviao);
         if (process == nullptr) {
@@ -77,23 +82,29 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
 #endif
             return;
         }
-    } else if (!control.aceita_avioes) {
-        mensagemAviao.resposta_type = Mensagem_resposta::Porta_Fechada;
-    } else if (control.avioes.size() >= control.MAX_AVIOES) {
-        mensagemAviao.resposta_type = Mensagem_resposta::MAX_Atingido;
-    } else if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, nullptr)) {
-        control.avioes.emplace_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av, std::move(coms.value()));
-        mensagemAviao.resposta_type = Mensagem_resposta::lol_ok;
-#ifdef _DEBUG
-        tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" aceite.") << std::endl;
-#endif
-    } else {
-#ifdef _DEBUG
-        tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" receitado.") << std::endl;
-#endif
-        mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_nao_existe;
     }
 
+
+    {//verifies values and takes actions
+        auto guard = GuardLock(control.mutex_interno);
+
+        if (!control.aceita_avioes) {
+            mensagemAviao.resposta_type = Mensagem_resposta::Porta_Fechada;
+        } else if (control.avioes.size() >= control.MAX_AVIOES) {
+            mensagemAviao.resposta_type = Mensagem_resposta::MAX_Atingido;
+        } else if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, nullptr)) {
+            control.avioes.emplace_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av, std::move(coms.value()));
+            mensagemAviao.resposta_type = Mensagem_resposta::lol_ok;
+#ifdef _DEBUG
+            tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" aceite.") << std::endl;
+#endif
+        } else {
+#ifdef _DEBUG
+            tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" receitado.") << std::endl;
+#endif
+            mensagemAviao.resposta_type = Mensagem_resposta::aeroporto_nao_existe;
+        }
+    }
     sendMessage(coms.value(), mensagemAviao);
 }
 
@@ -137,71 +148,81 @@ void killMe(Control &control, Mensagem_Control &mensagemControl) {
     find_and_sendMessage(control, mensagemControl.id_aviao, mensagemAviao);
 }
 
+#define WAIT_TIMELIMIT INFINITE
+
+void mensagem_recebe(Mensagem_Control &mensagemControl,
+                     SharedMemoryMap_control &sharedMem, shared_control_aviao &locks) {
+    WaitForSingleObject(locks.semaforo_read_control_aviao, WAIT_TIMELIMIT);
+    WaitForSingleObject(locks.mutex_partilhado, WAIT_TIMELIMIT);
+    {
+        CopyMemory(&mensagemControl, &sharedMem.buffer_mensagens_control[sharedMem.posReader],
+                   sizeof(Mensagem_Control));
+        sharedMem.posReader++;
+        if (sharedMem.posReader == CIRCULAR_BUFFERS_SIZE)
+            sharedMem.posReader = 0;
+    }
+    ReleaseMutex(locks.mutex_partilhado);
+    ReleaseSemaphore(locks.semaforo_write_control_aviao, 1, nullptr);
+}
+void pingUpdate(Control &control, Mensagem_Control &mensagemControl){
+    auto guard = GuardLock(control.mutex_interno);
+    auto aviao = std::find_if(control.avioes.begin(), control.avioes.end(), [&](aviao_in_controlstorage& aviao){
+        return aviao.IDAv == mensagemControl.id_aviao;
+    });
+    if(aviao != control.avioes.end())
+        aviao->update_time();
+}
+
+void mensagem_trata(Control &control, Mensagem_Control &mensagemControl) {
+    const TCHAR *type_string;
+    switch (mensagemControl.type) {
+        case confirmar_novo_aviao: {
+            type_string = t("confirmar_novo_aviao");
+            confirmarNovoAviao(control, mensagemControl);
+            break;
+        }
+        case alterar_coords: {
+            type_string = "alterar_coords";
+            alterarCoords(control, mensagemControl);
+            break;
+        }
+        case ping: {
+            type_string = t("ping");
+            pingUpdate(control, mensagemControl);
+            break;
+        }
+        case novo_destino: {
+            type_string = t("novo_destino\"");
+            novoDestino(control, mensagemControl);
+            break;
+        }
+        case suicidio: {
+            type_string = t("suicidio");
+            killMe(control, mensagemControl);
+            break;
+        }
+    }
+#ifdef _DEBUG
+    tcout << t("[DEBUG]: Recebi msg_content \"") << type_string << t("\" por aviao com pid ")
+          << mensagemControl.id_aviao
+          << std::endl;
+#endif
+}
+
 DWORD WINAPI ThreadReadBuffer(LPVOID param) {
     Control &control = *(Control *) param;
     Mensagem_Control mensagemControl;
-    shared_control_aviao &locks = *shared_control_aviao::get();
-    SharedMemoryMap_control &sharedMem = *control.view_of_file_pointer;
-    Mensagem_Control *msgBuffer = sharedMem.buffer_mensagens_control;
+    auto &sharedMem = *control.view_of_file_pointer;
+    auto &locks = *shared_control_aviao::get();
     bool exit = false;
     while (!exit) {
-        WaitForSingleObject(locks.semaforo_read_control_aviao, INFINITE);
-        WaitForSingleObject(locks.mutex_partilhado, INFINITE);
-        {
-            CopyMemory(&mensagemControl, &msgBuffer[sharedMem.posReader], sizeof(Mensagem_Control));
-            sharedMem.posReader++;
-            if (sharedMem.posReader == CIRCULAR_BUFFERS_SIZE)
-                sharedMem.posReader = 0;
-        }
-        ReleaseMutex(locks.mutex_partilhado);
-        ReleaseSemaphore(locks.semaforo_write_control_aviao, 1, nullptr);
-        const TCHAR *type_string;
-        switch (mensagemControl.type) {
-            case confirmar_novo_aviao: {
-                type_string = t("confirmar_novo_aviao");
-                confirmarNovoAviao(control, mensagemControl);
-                break;
-            }
-            case alterar_coords: {
-                type_string = "alterar_coords";
-                alterarCoords(control, mensagemControl);
-                break;
-            }
-            case ping: {
-                type_string = t("ping");
-                break;
-            }
-
-            case novo_destino: {
-                type_string = t("novo_destino\"");
-                novoDestino(control, mensagemControl);
-                break;
-            }
-            case suicidio: {
-                type_string = t("suicidio");
-                killMe(control, mensagemControl);
-                break;
-            }
-
-        }
+        mensagem_recebe(mensagemControl, sharedMem, locks);
+        mensagem_trata(control, mensagemControl);
+        if (control.terminar)
+            exit = true;
 #ifdef _DEBUG
-        tcout << t("[DEBUG]: Recebi msg_content \"") << type_string << t("\" por aviao com pid ")
-              << mensagemControl.id_aviao
-              << std::endl;
+        tcerr << t("[DEBUG]: Buffer reading cycle done.\n");
 #endif
-        {
-            WaitForSingleObject(control.mutex_interno, INFINITE);
-            if (control.terminar) {
-                exit = true;
-            } else {
-                auto result = std::find_if(control.avioes.begin(), control.avioes.end(), [&](AviaoShare &aviao) {
-                    return aviao.IDAv == mensagemControl.id_aviao;
-                });
-                if (result != control.avioes.end())
-                    result->updated = std::chrono::high_resolution_clock::now();
-            }
-            ReleaseMutex(control.mutex_interno);
-        }
     }
     return 1;
 }
@@ -220,13 +241,17 @@ void limpaAntigos(Control &control) {
         while (it != control.avioes.end()) {
             durantion_in_milliseconds =
                     (std::chrono::duration_cast<std::chrono::milliseconds>(now - it->updated)).count();
+
             if (durantion_in_milliseconds >= 3000) {
 #ifdef _DEBUG
                 tcout << t("Vou matar o processo ") << it->IDAv << t(" pelo exceso de tempo de ")
                       << durantion_in_milliseconds << t("ms.") << std::endl;
 #endif
                 processes_to_delete.push_back(it->IDAv);
-                control.avioes.erase(it++);
+                auto temp = it++;
+                control.avioes.erase(temp);
+            }else{
+                it++;
             }
         }
     }
@@ -245,6 +270,9 @@ void limpaAntigos(Control &control) {
     while (true) {
         Sleep(3000);
         limpaAntigos(control);
+#ifdef _DEBUG
+        tcerr << t("[DEBUG]: Clean up cicle done.") << std::endl;
+#endif
     }
 }
 
@@ -265,7 +293,8 @@ int Control::run() {
 }
 
 
-aviao_in_controlstorage::aviao_in_controlstorage(AviaoShare share, AviaoSharedObjects_control &&coms)
+aviao_in_controlstorage::aviao_in_controlstorage(AviaoShare
+                                                 share, AviaoSharedObjects_control &&coms)
         : AviaoShare(share), coms(std::move(coms)) {
     update_time();
 }

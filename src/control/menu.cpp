@@ -7,6 +7,7 @@ Menu::Menu(Control &control) : control(control), counter_aeroporto(0) {}
 void Menu::run() {
     bool exit = false;
     int input = -1;
+    tstring line_input;
     do {
         tcout << t("\nO que deseja fazer?\n");
         tcout << t("*********************************") << std::endl;
@@ -35,9 +36,11 @@ void Menu::run() {
         }
         try {
             do {
-                tcin >> input;
+                std::getline(tcin, line_input);
+                std::basic_stringstream<TCHAR> sstream(line_input);
+                sstream >> input;
             } while (input <= 0);
-        } catch (std::exception e) {
+        } catch (std::exception& e) {
             tcout << e.what();
             break;
         }
@@ -86,6 +89,7 @@ void Menu::cria_aeroporto() {
     tcout << t("Insira as Coordenadas do novo Aeroporto:") << std::endl;
     bool aeroporto_near;
     bool exit_loop = false;
+    tstring line_input;
     do {
         aeroporto_near = false;
         do {
@@ -105,12 +109,16 @@ void Menu::cria_aeroporto() {
         do {
             tcout << t("X:");
             tcout.flush();
-            tcin >> a.pos.x;
+            std::getline(tcin, line_input);
+            std::basic_stringstream<TCHAR> sstream(line_input);
+            sstream  >> a.pos.x;
         } while (a.pos.x < 0 || a.pos.x > 999);
         do {
             tcout << t("Y:");
             tcout.flush();
-            tcin >> a.pos.y;
+            std::getline(tcin, line_input);
+            std::basic_stringstream<TCHAR> sstream(line_input);
+            sstream  >>  a.pos.y;
         } while (a.pos.y < 0 || a.pos.y > 999);
         {
             auto guard = GuardLock(control.mutex_interno);
