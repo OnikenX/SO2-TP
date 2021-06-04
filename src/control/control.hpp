@@ -34,7 +34,7 @@ struct Control {
     const DWORD MAX_AEROPORTOS;
     bool terminar;
     //mutex_produtor para mexer na data do control
-    HANDLE mutex_interno;
+    CRITICAL_SECTION critical_section_interno;
 
     // caso exista problemas a criar o control o optional não ira retornar um control
     static std::unique_ptr<Control> create(DWORD max_avioes = 50, DWORD max_aeroportos = 10);
@@ -62,7 +62,7 @@ struct Control {
     bool verificaAeroporto_e_atualizaSeAviao(Mensagem_Control &mensagemControl, Mensagem_Aviao *mensagemAviao);
 
     Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
-            SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno);
+            SharedMemoryMap_control *view_of_file_pointer, CRITICAL_SECTION critical_section_interno);
 
     std::vector<Aeroporto> aeroportos;
     std::list<aviao_in_controlstorage> avioes;

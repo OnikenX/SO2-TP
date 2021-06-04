@@ -77,13 +77,14 @@ std::unique_ptr<Mensagem_Aviao> AviaoInstance::sendMessage(bool recebeResposta, 
 [[noreturn]] DWORD WINAPI ThreadUpdater(LPVOID param){
     AviaoInstance &aviao = *(AviaoInstance*)param;
     while(true){
-        Mensagem_Control mensagemControl;
+        Mensagem_Control mensagemControl{};
+        mensagemControl.id_aviao = aviao.aviao.IDAv;
         mensagemControl.type = ping;
         aviao.sendMessage(false, mensagemControl);
 #ifdef _DEBUG
         tcout << t("[Debug]: Ping...") << std::endl;
 #endif
-        Sleep(500);
+        Sleep(1000);
     }
 }
 

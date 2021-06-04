@@ -3,10 +3,10 @@
 //funções do control que servem de inicialização
 
 Control::Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
-                 SharedMemoryMap_control *view_of_file_pointer, HANDLE mutex_interno)
+                 SharedMemoryMap_control *view_of_file_pointer, CRITICAL_SECTION critical_section_interno)
         : MAX_AVIOES(max_avioes), MAX_AEROPORTOS(max_aeroportos),
           shared_memory_handle(shared_memory_handle), view_of_file_pointer(view_of_file_pointer),
-          aceita_avioes(true), mutex_interno(mutex_interno), terminar(false) {}
+          aceita_avioes(true), critical_section_interno(critical_section_interno), terminar(false) {}
 
 
 // registry stuff
@@ -72,10 +72,10 @@ std::unique_ptr<Control> Control::create(DWORD max_avioes, DWORD max_aeroportos)
 
     //cria se um file maping
     HANDLE hMapFile =
-            CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(SharedMemoryMap_control),
+            CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(SharedMemoryMap_control),
                               SHARED_MEMORY_NAME);
     DWORD getlasterror = GetLastError();
-    if (hMapFile == NULL) {
+    if (hMapFile == nullptr) {
         tcerr << t("Não foi possivel criar o file mapping por uma razão desconhecida: ")
               << getlasterror << std::endl;
         return nullptr;
@@ -91,15 +91,15 @@ std::unique_ptr<Control> Control::create(DWORD max_avioes, DWORD max_aeroportos)
                                                           sizeof(SharedMemoryMap_control)
     );
 
-    if (pBuf == NULL) {
+    if (pBuf == nullptr) {
         _tprintf(TEXT("Could not map view of file (%d).\n"),
                  GetLastError());
         CloseHandle(hMapFile);
         return nullptr;
     }
 
-    HANDLE mutex_interno = CreateMutex(nullptr, FALSE, nullptr);
-    if (mutex_interno == nullptr) {
+    CRITICAL_SECTION criticalSection;
+    if (!InitializeCriticalSectionAndSpinCount(&criticalSection, 0x0000400)) {
         CloseHandle(hMapFile);
         UnmapViewOfFile(pBuf);
         return nullptr;
@@ -108,18 +108,18 @@ std::unique_ptr<Control> Control::create(DWORD max_avioes, DWORD max_aeroportos)
     if (!setup_do_registry(max_avioes, max_aeroportos)) {
         CloseHandle(hMapFile);
         UnmapViewOfFile(pBuf);
-        CloseHandle(mutex_interno);
+        LeaveCriticalSection(&criticalSection);
         return nullptr;
     }
 
     // a razão para usar o unique pointer é para que o compilar n esteja a chamar o contrutor ou o descontrutor desnecessariamente
     // com um unique pointer certificamo nos que n existem copias descessarias do Control ou referencias para ele
-    return std::move(std::make_unique<Control>(max_avioes, max_aeroportos, hMapFile, pBuf, mutex_interno));
+    return std::move(std::make_unique<Control>(max_avioes, max_aeroportos, hMapFile, pBuf, criticalSection));
 }
 
 void Control::liberta_o_jack() {
     SetEvent(shared_control_aviao::get()->evento_JackTheReaper);
-    auto guard = GuardLock(mutex_interno);
+    auto guard = CriticalSectionGuard(critical_section_interno);
     terminar = true;
     tcout << t("Isto é o Big Crunch deste universo, foi um prazer poder viajar consigo") << std::endl;
 }

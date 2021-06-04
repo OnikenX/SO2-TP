@@ -59,7 +59,7 @@
 struct Cords {
     int x;
     int y;
-    bool isEqual(Cords &outro);
+    bool isEqual(Cords &outro) const;
 };
 
 struct AviaoShare {
@@ -108,7 +108,7 @@ union Mensagem_Control_union{
 
 //as mensagens que sao enviadas para o control pelo aviaoInstance
 struct Mensagem_Control {//o aviao envia isto
-    Mensagem_Control();
+    Mensagem_Control() = default;
 
     Mensagem_types type;
     unsigned long id_aviao;
@@ -147,10 +147,10 @@ struct Mensagem_Aviao { //aviao recebe
 
 //memoria partinha do control
 struct SharedMemoryMap_control {
-    bool se_pode_criar_mais_avioes;
+//    bool se_pode_criar_mais_avioes;
     //numero de avioes em execução
-    int nAvioes;
-    bool terminar;
+//    int nAvioes;
+//    bool terminar;
     //buffer circular das mensagens que vao do aviaoInstance para o control
     Mensagem_Control buffer_mensagens_control[CIRCULAR_BUFFERS_SIZE];
     int posReader, posWriter;
@@ -160,7 +160,12 @@ struct SharedMemoryMap_control {
 struct GuardLock {
     ~GuardLock();
     HANDLE mutex;
-    GuardLock(HANDLE _mutex);
-    GuardLock(GuardLock&& guard);
+    explicit GuardLock(HANDLE _mutex);
+    GuardLock(GuardLock&& guard) noexcept ;
 };
 
+struct CriticalSectionGuard{
+    ~CriticalSectionGuard();
+    CRITICAL_SECTION  &criticalSection;
+    explicit CriticalSectionGuard(CRITICAL_SECTION  &criticalSection);
+};

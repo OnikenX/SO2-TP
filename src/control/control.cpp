@@ -25,7 +25,7 @@ void sendMessage(const AviaoSharedObjects_control &coms, Mensagem_Aviao &mensage
 void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Aviao &mensagemAviao) {
     auto aviao = control.avioes.begin();
     {
-        auto guard = GuardLock(control.mutex_interno);
+        auto guard = CriticalSectionGuard(control.critical_section_interno);
         aviao = std::find_if(control.avioes.begin(), control.avioes.end(),
                              [&](aviao_in_controlstorage &aviaoShareWithComs) {
                                  return aviaoShareWithComs.IDAv == id_aviao;
@@ -42,7 +42,7 @@ void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Avi
 
 bool
 Control::verificaAeroporto_e_atualizaSeAviao(Mensagem_Control &mensagemControl, Mensagem_Aviao *mensagemAviao) {
-    auto guard = GuardLock(mutex_interno);
+    auto guard = CriticalSectionGuard(critical_section_interno);
 
     auto result = std::find_if(std::begin(aeroportos), std::end(aeroportos), [&](Aeroporto &a) {
         return a.IDAero == mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto;
@@ -86,7 +86,7 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
 
 
     {//verifies values and takes actions
-        auto guard = GuardLock(control.mutex_interno);
+        auto guard = CriticalSectionGuard(control.critical_section_interno);
 
         if (!control.aceita_avioes) {
             mensagemAviao.resposta_type = Mensagem_resposta::Porta_Fechada;
@@ -122,7 +122,7 @@ void novoDestino(Control &control, Mensagem_Control &mensagemControl) {
 
 
 bool Control::existeAlguem(Mensagem_Control &mensagemControl) {
-    auto guard = GuardLock(mutex_interno);
+    auto guard = CriticalSectionGuard(critical_section_interno);
     for (auto &a: avioes) {
         if (a.PosA.y == mensagemControl.mensagem.pedidoConfirmarMovimento.y &&
             a.PosA.x == mensagemControl.mensagem.pedidoConfirmarMovimento.x) {
@@ -165,12 +165,14 @@ void mensagem_recebe(Mensagem_Control &mensagemControl,
     ReleaseSemaphore(locks.semaforo_write_control_aviao, 1, nullptr);
 }
 void pingUpdate(Control &control, Mensagem_Control &mensagemControl){
-    auto guard = GuardLock(control.mutex_interno);
+    auto guard = CriticalSectionGuard(control.critical_section_interno);
     auto aviao = std::find_if(control.avioes.begin(), control.avioes.end(), [&](aviao_in_controlstorage& aviao){
         return aviao.IDAv == mensagemControl.id_aviao;
     });
     if(aviao != control.avioes.end())
         aviao->update_time();
+    else
+        tcout << t("Aviao not found for update.\n");
 }
 
 void mensagem_trata(Control &control, Mensagem_Control &mensagemControl) {
@@ -235,7 +237,7 @@ void limpaAntigos(Control &control) {
     std::vector<DWORD> processes_to_delete;
     processes_to_delete.reserve(control.avioes.size());
     {//find processes to delete
-        auto guard = GuardLock(control.mutex_interno);
+        auto guard = CriticalSectionGuard(control.critical_section_interno);
         auto it = control.avioes.begin();
         long long durantion_in_milliseconds;
         while (it != control.avioes.end()) {
@@ -300,6 +302,7 @@ aviao_in_controlstorage::aviao_in_controlstorage(AviaoShare
 }
 
 void aviao_in_controlstorage::update_time() {
+//    auto guard = CriticalSectionGuard(criticalSection);
     updated = std::chrono::high_resolution_clock::now();
 }
 
