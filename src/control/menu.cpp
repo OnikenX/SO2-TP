@@ -3,7 +3,6 @@
 
 Menu::Menu(Control &control) : control(control), counter_aeroporto(0) {}
 
-
 void Menu::run() {
     bool exit = false;
     int input = -1;
@@ -16,12 +15,7 @@ void Menu::run() {
         tcout << t("**   2 - Consultar Aeroporto   **") << std::endl;
         tcout << t("**   3 - Consultar Avião       **") << std::endl;
         tcout << t("**   4 - Consultar Passageiros **") << std::endl;
-        WaitForSingleObject(control.mutex_interno, INFINITE);
-        if (this->control.aceita_avioes)
-            tcout << t("**   5 - No More Planes        **") << std::endl;
-        else
-            tcout << t("**   5 - More Planes Please    **") << std::endl;
-        ReleaseMutex(control.mutex_interno);
+        tcout << t("**   5 - Toggle new Planes     **") << std::endl;
         tcout << t("**                             **") << std::endl;
         tcout << t("**   6 - Shutdown total        **") << std::endl;
         tcout << t("*********************************") << std::endl;
@@ -40,7 +34,7 @@ void Menu::run() {
                 std::basic_stringstream<TCHAR> sstream(line_input);
                 sstream >> input;
             } while (input <= 0);
-        } catch (std::exception& e) {
+        } catch (std::exception &e) {
             tcout << e.what();
             break;
         }
@@ -74,12 +68,23 @@ void Menu::run() {
 }
 
 bool verificaMaxAeroportos(Menu *isto) {
-    auto guard = GuardLock(isto->control.mutex_interno);
+    auto guard = CriticalSectionGuard(isto->control.critical_section_interno);
     if (isto->control.MAX_AEROPORTOS <= isto->counter_aeroporto) {
         tcout << t("Já foi atingido o limite de Aeroportos possiveis") << std::endl;
         return false;
     }
     return true;
+}
+
+void verificaAeroporto(Aeroporto& a, Control& control, bool& exit_loop){
+    auto guard = CriticalSectionGuard(control.critical_section_interno);
+    auto existe = std::find_if(std::begin(control.aeroportos), std::end(control.aeroportos),
+                               [&](Aeroporto tmp) { return !_tcscmp(tmp.nome, a.nome); });
+    if (existe != std::end(control.aeroportos)) {
+        tcout << t("Tens de ser mais original, esse nome ja foi patentiado:");
+    } else {
+        exit_loop = true;
+    }
 }
 
 void Menu::cria_aeroporto() {
@@ -96,32 +101,24 @@ void Menu::cria_aeroporto() {
             tcout << t("Nome do Aeroporto:");
             tcout.flush();
             tcin >> a.nome;
-            WaitForSingleObject(control.mutex_interno, INFINITE);
-            auto existe = std::find_if(std::begin(this->control.aeroportos), std::end(this->control.aeroportos),
-                                       [&](Aeroporto tmp) { return !_tcscmp(tmp.nome, a.nome); });
-            if (existe != std::end(this->control.aeroportos)) {
-                tcout << t("Tens de ser mais original, esse nome ja foi patentiado:");
-            } else {
-                exit_loop = true;
-            }
-            ReleaseMutex(control.mutex_interno);
+            verificaAeroporto(a, control, exit_loop);
         } while (!exit_loop);
         do {
             tcout << t("X:");
             tcout.flush();
             std::getline(tcin, line_input);
             std::basic_stringstream<TCHAR> sstream(line_input);
-            sstream  >> a.pos.x;
+            sstream >> a.pos.x;
         } while (a.pos.x < 0 || a.pos.x > 999);
         do {
             tcout << t("Y:");
             tcout.flush();
             std::getline(tcin, line_input);
             std::basic_stringstream<TCHAR> sstream(line_input);
-            sstream  >>  a.pos.y;
+            sstream >> a.pos.y;
         } while (a.pos.y < 0 || a.pos.y > 999);
         {
-            auto guard = GuardLock(control.mutex_interno);
+            auto guard = CriticalSectionGuard(control.critical_section_interno);
             for (auto &elem : this->control.aeroportos) {
                 int tmpX = abs(elem.pos.x - a.pos.x);
                 int tmpY = abs(elem.pos.y - a.pos.y);
@@ -136,13 +133,13 @@ void Menu::cria_aeroporto() {
 
     a.IDAero = ++this->counter_aeroporto;
     {
-        auto guard = GuardLock(control.mutex_interno);
+        auto guard = CriticalSectionGuard(control.critical_section_interno);
         this->control.aeroportos.insert(this->control.aeroportos.end(), a);
     }
 }
 
 void Menu::consulta_aeroporto() {
-    auto guard = GuardLock(control.mutex_interno);
+    auto guard = CriticalSectionGuard(control.critical_section_interno);
     for (int i = 0; i < counter_aeroporto; i++) {
         tcout << t("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@") << std::endl;
         tcout << t("Aeroporto nr ") << this->control.aeroportos[i].IDAero << std::endl;
@@ -154,7 +151,7 @@ void Menu::consulta_aeroporto() {
 }
 
 void Menu::consultar_aviao() {
-    auto guard = GuardLock(control.mutex_interno);
+    auto guard = CriticalSectionGuard(control.critical_section_interno);
     for (auto &aviao : control.avioes) {
         tcout << t("#############################################################################") << std::endl;
         tcout << t("Avião nr ") << aviao.IDAv << std::endl;
@@ -169,7 +166,7 @@ void Menu::consultar_aviao() {
 }
 
 void Menu::desativa_novos_avioes() {
-    auto guard = GuardLock(control.mutex_interno);
+    auto guard = CriticalSectionGuard(control.critical_section_interno);
     this->control.aceita_avioes = !this->control.aceita_avioes;
 }
 
