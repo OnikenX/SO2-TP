@@ -39,7 +39,7 @@ struct AviaoInstance {
                   unsigned long id_do_aeroporto);
     std::unique_ptr<AviaoSharedObjects_aviao> sharedComs;
     static std::unique_ptr<AviaoInstance> create(AviaoShare av);
-    int move(int cur_x, int cur_y, int final_dest_x, int final_dest_y, int *next_x, int *next_y);
+    int move(int cur_x, int cur_y, int final_dest_x, int final_dest_y, int *next_x, int *next_y) const;
     int run();
     ~AviaoInstance();
     std::unique_ptr<Mensagem_Aviao> sendMessage(bool recebeResposta, Mensagem_Control &mensagemControl);
