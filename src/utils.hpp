@@ -57,8 +57,8 @@
 
 //structs partilhadas
 struct Cords {
-    int x;
-    int y;
+    unsigned int x;
+    unsigned int y;
     bool isEqual(Cords &outro) const;
 };
 

@@ -92,7 +92,7 @@ void confirmarNovoAviao(Control &control, Mensagem_Control &mensagemControl) {
             mensagemAviao.resposta_type = Mensagem_resposta::Porta_Fechada;
         } else if (control.avioes.size() >= control.MAX_AVIOES) {
             mensagemAviao.resposta_type = Mensagem_resposta::MAX_Atingido;
-        } else if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, nullptr)) {
+        } else if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, &mensagemAviao)) {
             control.avioes.emplace_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av, std::move(coms.value()));
             mensagemAviao.resposta_type = Mensagem_resposta::lol_ok;
 #ifdef _DEBUG

@@ -120,8 +120,8 @@ void Menu::cria_aeroporto() {
         {
             auto guard = CriticalSectionGuard(control.critical_section_interno);
             for (auto &elem : this->control.aeroportos) {
-                int tmpX = abs(elem.pos.x - a.pos.x);
-                int tmpY = abs(elem.pos.y - a.pos.y);
+                int tmpX = abs(long(elem.pos.x - a.pos.x));
+                int tmpY = abs(long(elem.pos.y - a.pos.y));
                 if (tmpX < 10 && tmpY < 10) {
                     tcout << t("Já existe um aeroporto nas redondezas, não me parece boa ideia construir um aqui")
                           << std::endl;

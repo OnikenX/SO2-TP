@@ -96,7 +96,7 @@ AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMem
 }
 
 int AviaoInstance::move(int cur_x, int cur_y, int final_dest_x,
-                        int final_dest_y, int *next_x, int *next_y) {
+                        int final_dest_y, int *next_x, int *next_y) const {
     auto move_fnc = (int (*)(int, int, int, int, int *, int *)) ptr_move_func;
     return move_fnc(cur_x, cur_y, final_dest_x, final_dest_y, next_x, next_y);
 }
@@ -127,6 +127,8 @@ bool AviaoInstance::verifica_criacao_com_control() {
 #ifdef _DEBUG
         tcout << t("[DEBUG]: Creação aceita com sucesso!") << std::endl;
 #endif
+        this->aviao.PosA.x = this->aviao.PosDest.x = resposta->msg_content.respostaNovasCoordenadas.x;
+        this->aviao.PosA.y = this->aviao.PosDest.y = resposta->msg_content.respostaNovasCoordenadas.y;
         return true;
     } else {
         tstring causa = t("");
