@@ -2,6 +2,8 @@
 #include "shared_control_aviao.hpp"
 #include "menu.hpp"
 
+
+
 DWORD WINAPI ThreadMenu(LPVOID param) {
     Menu &menu = *(Menu *) param;
     menu.run();
@@ -184,7 +186,7 @@ void mensagem_trata(Control &control, Mensagem_Control &mensagemControl) {
             break;
         }
         case alterar_coords: {
-            type_string = "alterar_coords";
+            type_string = t("alterar_coords");
             alterarCoords(control, mensagemControl);
             break;
         }
