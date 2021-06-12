@@ -31,7 +31,7 @@ set(aviao_core src/aviao/aviao.cpp src/aviao/main.cpp src/aviao/startup.cpp)
 set(aviao_menu src/aviao/menu.cpp)
 add_executable(SO2-TP-aviao  ${aviao_core} ${aviao_menu} ${utils} src/shared_control_aviao.cpp src/shared_control_aviao.hpp)
 
-add_executable(SO2-TP-passag src/passag.cpp)
+add_executable(SO2-TP-passag src/passageiro/passag.cpp src/passageiro/main.cpp)
 
 add_executable(exemplo_consumer src/exemplo_consumer.c)
 add_executable(exemplo_producer src/exemplo_producer.c)
