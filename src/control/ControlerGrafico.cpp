@@ -11,6 +11,8 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
+NCordes cords;
+
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -29,7 +31,7 @@ INT_PTR CALLBACK    NovoAviao(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI _tWinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance ,TCHAR * lpCmdLine, int nCmdShow)
 {
-
+    UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Place code here.
@@ -105,7 +107,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
 
    HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, &cordes);
 
    if (!hWnd)
    {
@@ -138,7 +140,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_COMMAND:
         {
-        
+        LONG_PTR userdata = GetWindowLongPtr(hWnd, GWLP_USERDATA);
+        NCordes* pCordes = NULL;
+
+        if (message == WM_CREATE) {
+            CREATESTRUCT* pCreate = (CREATESTRUCT*)(lParam);
+            pCordes = (NCordes*)pCreate->lpCreateParams;
+            SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pCordes);
+        }
+        else {
+            pCordes = (NCordes*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+        }
+
+
             int wmId = LOWORD(wParam);
             // Parse the menu selections:
             switch (wmId)
@@ -202,6 +216,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 INT_PTR CALLBACK NovoAviao(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    auto rfile;
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
@@ -209,6 +224,23 @@ INT_PTR CALLBACK NovoAviao(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
+        int wmId = LOWORD(wParam);
+        // Parse the menu selections:
+        switch (wmId)
+        {
+        case IDC_NomeAero:
+                rfile = GetDlgItem(hDlg, IDC_NomeAero);
+                GetWindowText(rfile, pCordes.nome,50);
+                MessageBox(hDlg, cordes.nome, L"edit text", 0);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+            //case WM_PAINT:
+
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
         if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
         {
             MessageBoxEx(NULL, TEXT("Miau"), TEXT("O Nuno Esteve Aqui!!!"),
