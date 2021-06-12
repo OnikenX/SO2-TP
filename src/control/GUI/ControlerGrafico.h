@@ -18,3 +18,8 @@ private:
     void consultar_aviao();
     void desativa_novos_avioes();
 };
+
+typedef struct cordes {
+    int x, y;
+    TCHAR nome[50];
+} NCordes;
