@@ -2,7 +2,7 @@
 // Created by OnikenX on 5/15/2021.
 //
 
-#include <utils.hpp>
+#include "utils.hpp"
 
 
 //implementacao do guard lock
@@ -51,8 +51,8 @@ GuardLock::GuardLock(GuardLock &&guard) noexcept {
 //le um numero, returna o em resulting_value e returna se ouve um erro
 bool ler_numero(const TCHAR *string_numero, long& resulting_value) {
     errno = 0;
-    char* p_end;
-    const long i = std::strtol(string_numero, &p_end, 10);
+    TCHAR* p_end;
+    const long i = _tcstol(string_numero, &p_end, 10);
     const bool range_error = errno == ERANGE;
     if (range_error || i <= 0){
         tcerr << "[ERROR]: Range error ou invalied number occurred(only positive numbers).";

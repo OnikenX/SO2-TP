@@ -5,7 +5,7 @@
 #ifndef SO2_TP_SHARED_CONTROL_PASSAGEIRO_HPP
 #define SO2_TP_SHARED_CONTROL_PASSAGEIRO_HPP
 
-#include <utils.hpp>
+#include "utils.hpp"
 
 #define NAMEDPIPE_NAME TEXT("\\\\.\\pipe\\SO2-TP-NAMEDPIPE")
 

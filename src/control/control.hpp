@@ -4,9 +4,17 @@
 #include <vector>
 #include <unordered_map>
 
-#include <utils.hpp>
-#include <shared_control_aviao.hpp>
-#include <shared_control_passageiro.hpp>
+#include "../utils.hpp"
+#include "../shared_control_aviao.hpp"
+#include "../shared_control_passageiro.hpp"
+
+#include "resource.h"
+
+//argumentos graphiocs
+
+
+
+struct Control;
 
 //strutura de assistencia
 struct AviaoSharedObjects_control {
@@ -58,6 +66,30 @@ struct aviao_in_controlstorage : AviaoInfo {
     std::list<Passageiro> passageiros_abordo;
 };
 
+struct Argumentos_deinit {
+    HINSTANCE hInstance;
+    HINSTANCE hPrevInstance;
+    LPTSTR lpCmdLine;
+    int nCmdShow;
+    Aeroporto aeroporto;
+};
+
+
+struct Menu
+{
+    explicit Menu(Control &control);
+    void run();
+    Menu(const Menu &) = delete; // non construction-copyable
+    Menu &operator=(const Menu &) = delete; // non copyable
+    Control& control;
+    int counter_aeroporto;
+    void cria_aeroporto();
+    void consulta_aeroporto();
+    void consultar_aviao();
+    void desativa_novos_avioes();
+
+    Argumentos_deinit componentes_graphicos{};
+};
 struct Control {
     const DWORD MAX_AVIOES;
     const DWORD MAX_AEROPORTOS;
@@ -92,7 +124,7 @@ struct Control {
 
     Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
             SharedMemoryMap_control *view_of_file_pointer, CRITICAL_SECTION critical_section_interno);
-
+    Menu menu;
     std::vector<Aeroporto> aeroportos;
     //handles dos passageiros a espera
     std::list<Passageiro> passageiros;
@@ -100,3 +132,4 @@ struct Control {
     std::list<aviao_in_controlstorage> avioes;
     bool aceita_avioes;
 };
+

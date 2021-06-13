@@ -1,6 +1,5 @@
 #include "control.hpp"
-#include "shared_control_aviao.hpp"
-#include "menu.hpp"
+#include "../shared_control_aviao.hpp"
 
 DWORD WINAPI ThreadMenu(LPVOID param) {
     Menu &menu = *(Menu *) param;
@@ -205,6 +204,8 @@ void mensagem_trata(Control &control, Mensagem_Control_aviao &mensagemControl) {
             killMe(control, mensagemControl);
             break;
         }
+        default:
+            type_string = t("undefined");
     }
 #ifdef _DEBUG
     tcout << t("[DEBUG]: Recebi msg_content \"") << type_string << t("\" por aviaoInfo com pid ")
@@ -283,8 +284,6 @@ DWORD WINAPI PipeServer(LPVOID param);
 
 //O Nuno Esteve Aqui as 6h30!!!
 int Control::run() {
-    auto menu = std::make_unique<Menu>(*this);
-
 
     HANDLE threads[] = {
             //thread de leitura do buffer circular
@@ -294,7 +293,7 @@ int Control::run() {
             CreateThread(nullptr, 0, VerifyValues, this, 0, nullptr),
 #endif
             //menu do control
-            CreateThread(nullptr, 0, ThreadMenu, menu.get(), 0, nullptr),
+            CreateThread(nullptr, 0, ThreadMenu, &menu, 0, nullptr),
             //thread de receção dos passageiros
             CreateThread(nullptr, 0, PipeServer, this, 0, nullptr),
     };

@@ -1,4 +1,4 @@
-#include "menu.hpp"
+#include "control.hpp"
 #include <algorithm>
 
 Menu::Menu(Control &control) : control(control), counter_aeroporto(0) {}

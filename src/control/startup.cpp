@@ -1,12 +1,14 @@
 #include "control.hpp"
-#include "shared_control_aviao.hpp"
+#include "../shared_control_aviao.hpp"
 //funções do control que servem de inicialização
 
 Control::Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
                  SharedMemoryMap_control *view_of_file_pointer, CRITICAL_SECTION critical_section_interno)
         : MAX_AVIOES(max_avioes), MAX_AEROPORTOS(max_aeroportos),
           shared_memory_handle(shared_memory_handle), view_of_file_pointer(view_of_file_pointer),
-          aceita_avioes(true), critical_section_interno(critical_section_interno), terminar(false) {}
+          aceita_avioes(true), critical_section_interno(critical_section_interno), terminar(false), menu(*this) {
+
+}
 
 
 // registry stuff
