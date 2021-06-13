@@ -12,22 +12,6 @@ a dll que vem com este programa é só para 64bit windows.")
 ou use utilize uma dll de 32bit se quer usar o programa em 32bits.")
 #endif
 
-//novo destino
-//iniciar voo
-//suicidio
-//TODO: corrigir esta thread
-DWORD WINAPI Limbo(LPVOID param) {
-#ifdef _DEBUG
-    tcout << t("[DEBUG]: waiting for death ...") << std::endl;
-#endif
-    HANDLE evento = CreateEvent(nullptr, TRUE, FALSE, EVENT_KILLER);
-    WaitForSingleObject(evento, INFINITE);
-#ifdef _DEBUG
-    tcout << t("[DEBUG]: BOOM !!X\\ RIP In Piece );") << std::endl;
-#endif
-    return 1;
-}
-
 DWORD WINAPI ThreadMenu(LPVOID param) {
     AviaoInstance &aviao = *(AviaoInstance *) param;
     Menu menu(aviao);
@@ -36,14 +20,14 @@ DWORD WINAPI ThreadMenu(LPVOID param) {
     return 1;
 }
 
-std::unique_ptr<Mensagem_Aviao> AviaoInstance::sendMessage(bool recebeResposta, Mensagem_Control &mensagemControl) {
+std::unique_ptr<Mensagem_Aviao> AviaoInstance::sendMessage(bool recebeResposta, Mensagem_Control_aviao &mensagemControl) {
     //nao deixa ninguem enviar mensagens ao mesmo tempo na mesma thread
     auto guard = GuardLock(this->sharedComs->mutex_mensagens);
 
     WaitForSingleObject(shared_control_aviao::get()->semaforo_write_control_aviao, INFINITE);
     WaitForSingleObject(shared_control_aviao::get()->mutex_partilhado, INFINITE);
 
-    CopyMemory(&this->sharedMemoryMap->buffer_mensagens_control[this->sharedMemoryMap->posWriter], &mensagemControl, sizeof(Mensagem_Control));
+    CopyMemory(&this->sharedMemoryMap->buffer_mensagens_control[this->sharedMemoryMap->posWriter], &mensagemControl, sizeof(Mensagem_Control_aviao));
     this->sharedMemoryMap->posWriter++;
 
     if(this->sharedMemoryMap->posWriter == CIRCULAR_BUFFERS_SIZE)
@@ -77,9 +61,9 @@ std::unique_ptr<Mensagem_Aviao> AviaoInstance::sendMessage(bool recebeResposta, 
 [[noreturn]] DWORD WINAPI ThreadUpdater(LPVOID param){
     AviaoInstance &aviao = *(AviaoInstance*)param;
     while(true){
-        Mensagem_Control mensagemControl{};
-        mensagemControl.id_aviao = aviao.aviao.IDAv;
-        mensagemControl.type = ping;
+        Mensagem_Control_aviao mensagemControl{};
+        mensagemControl.id_aviao = aviao.aviaoInfo.IDAv;
+        mensagemControl.type = Mensagem_aviao_types::ping;
         aviao.sendMessage(false, mensagemControl);
 #ifdef _DEBUG
         tcout << t("[Debug]: Ping...") << std::endl;
@@ -101,8 +85,8 @@ int AviaoInstance::run() {
 }
 
 void AviaoInstance::suicidio() {
-    Mensagem_Control mensagemControl{};
-    mensagemControl.type = Mensagem_types::suicidio;
+    Mensagem_Control_aviao mensagemControl{};
+    mensagemControl.type = Mensagem_aviao_types::suicidio;
     sendMessage(false, mensagemControl);
 }
 

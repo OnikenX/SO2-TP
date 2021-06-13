@@ -33,9 +33,6 @@
 #include <WINDOWS.h>
 
 int main() {
-    int values[] = {21, 23, 55, 43};
-    auto it = std::rbegin(values);
-    while (it != std::rend(values))
-        std::cout << *it  << " " << (std::rend(values)-1 - it++)<< std::endl;
+
 
 }

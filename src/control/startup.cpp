@@ -200,7 +200,7 @@ AviaoSharedObjects_control::~AviaoSharedObjects_control() {
 }
 
 AviaoSharedObjects_control::AviaoSharedObjects_control(AviaoSharedObjects_control &&other)
-        : mutex(other.mutex), semaforo_write(other.semaforo_write), semaforo_read(other.semaforo_read),
+ noexcept         : mutex(other.mutex), semaforo_write(other.semaforo_write), semaforo_read(other.semaforo_read),
           filemap(other.filemap), sharedMensagemAviao(other.sharedMensagemAviao), deleted(false) {
     other.deleted = true;
 }

@@ -1,14 +1,22 @@
 #pragma once
 
-#include "./../utils.hpp"
+
 #include <vector>
 #include <unordered_map>
+
+#include <utils.hpp>
+#include <shared_control_aviao.hpp>
+#include <shared_control_passageiro.hpp>
 
 //strutura de assistencia
 struct AviaoSharedObjects_control {
     AviaoSharedObjects_control(HANDLE mutex, HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
                                Mensagem_Aviao *sharedMensagemAviao);
-    AviaoSharedObjects_control(AviaoSharedObjects_control&& aviaoSharedObjectsControl);
+
+    AviaoSharedObjects_control(AviaoSharedObjects_control &&aviaoSharedObjectsControl) noexcept;
+
+    AviaoSharedObjects_control() = default;
+
     static std::optional<AviaoSharedObjects_control> create(unsigned long id_aviao);
 
     AviaoSharedObjects_control(const AviaoSharedObjects_control &) = default; // non construction-copyable
@@ -22,11 +30,32 @@ private:
     bool deleted;
 };
 
-struct aviao_in_controlstorage : AviaoShare{
-    aviao_in_controlstorage(AviaoShare share, AviaoSharedObjects_control &&coms);
+struct Passageiro {
+    Passageiro(const PassageiroInfo & info, const HANDLE& pipe);
+    Passageiro(Passageiro &&passageiro) noexcept ;
+
+    Passageiro(const Passageiro &) = default; // non construction-copyable
+    Passageiro &operator=(const Passageiro &) = delete; // non copyable
+
+    PassageiroInfo info;
+    HANDLE pipe;
+
+    ~Passageiro();
+
+private:
+    bool moved;
+};
+
+struct aviao_in_controlstorage : AviaoInfo {
+    aviao_in_controlstorage(AviaoInfo share, AviaoSharedObjects_control &&coms);
+
     AviaoSharedObjects_control coms;
     std::chrono::time_point<std::chrono::steady_clock> updated;
+
     void update_time();
+
+    //lista de passageiros que se encontram numa viagem do aviao
+    std::list<Passageiro> passageiros_abordo;
 };
 
 struct Control {
@@ -56,15 +85,18 @@ struct Control {
     //mete o terminar a true e mete set ao evento
     void liberta_o_jack();
 
-    //verifica se existe um aviao na mesma localizaao
-    bool existeAlguem(Mensagem_Control &mensagemControl);
+    //verifica se existe um aviaoInfo na mesma localizaao
+    bool existeAlguem(Mensagem_Control_aviao &mensagemControl);
 
-    bool verificaAeroporto_e_atualizaSeAviao(Mensagem_Control &mensagemControl, Mensagem_Aviao *mensagemAviao);
+    bool verificaAeroporto_e_atualizaSeAviao(Mensagem_Control_aviao &mensagemControl, Mensagem_Aviao *mensagemAviao);
 
     Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
             SharedMemoryMap_control *view_of_file_pointer, CRITICAL_SECTION critical_section_interno);
 
     std::vector<Aeroporto> aeroportos;
+    //handles dos passageiros a espera
+    std::list<Passageiro> passageiros;
+
     std::list<aviao_in_controlstorage> avioes;
     bool aceita_avioes;
 };

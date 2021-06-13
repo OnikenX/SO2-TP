@@ -13,12 +13,12 @@ shared_control_aviao *shared_control_aviao::get() {
     static shared_control_aviao s;
     if (s.firsttime) {
         s.semaforo_read_control_aviao =
-                CreateSemaphore(NULL, 0, CIRCULAR_BUFFERS_SIZE, SEMAFORO_READ_CONTROL_AVIAO);
+                CreateSemaphore(nullptr, 0, CIRCULAR_BUFFERS_SIZE, SEMAFORO_READ_CONTROL_AVIAO);
         s.semaforo_write_control_aviao =
-                CreateSemaphore(NULL, CIRCULAR_BUFFERS_SIZE, CIRCULAR_BUFFERS_SIZE, SEMAFORO_WRITE_CONTROL_AVIAO);
+                CreateSemaphore(nullptr, CIRCULAR_BUFFERS_SIZE, CIRCULAR_BUFFERS_SIZE, SEMAFORO_WRITE_CONTROL_AVIAO);
         s.evento_JackTheReaper = CreateEvent(nullptr, TRUE, FALSE, EVENT_KILLER);
         SetLastError(0);
-        s.mutex_partilhado = CreateMutex(NULL, FALSE, MUTEX_PARTILHADO);
+        s.mutex_partilhado = CreateMutex(nullptr, FALSE, MUTEX_PARTILHADO);
         s.firsttime = false;
         if (!s.semaforo_read_control_aviao || !s.semaforo_write_control_aviao
             || !s.mutex_partilhado || !s.evento_JackTheReaper) {
@@ -55,4 +55,24 @@ shared_control_aviao::~shared_control_aviao() {
     tcout << t("[DEBUG]: Destroing shared_control_aviao...") << std::endl;
 #endif
     closeall();
+}
+
+
+SharedMemoryMap_control::SharedMemoryMap_control() : posReader(0), posWriter(0) {
+    memset(buffer_mensagens_control, 0, sizeof(Mensagem_Control_aviao) * CIRCULAR_BUFFERS_SIZE);
+}
+
+bool Cords::isEqual(Cords &outro) const {
+    return (this->x == outro.x && this->y == outro.y);
+}
+
+
+CriticalSectionGuard::CriticalSectionGuard(CRITICAL_SECTION &criticalSection)
+        : criticalSection(criticalSection) {
+    EnterCriticalSection(&this->criticalSection);
+}
+
+CriticalSectionGuard::~CriticalSectionGuard() {
+    LeaveCriticalSection(&criticalSection);
+
 }

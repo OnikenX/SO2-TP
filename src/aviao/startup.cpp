@@ -47,14 +47,14 @@ HMODULE getdll() {
 }
 
 std::unique_ptr<AviaoInstance>
-AviaoInstance::create(AviaoShare av) {
+AviaoInstance::create(AviaoInfo av) {
     unsigned long id_aeroporto = av.IDAv;
     HANDLE process = GetCurrentProcess();
     av.IDAv = (unsigned long) GetProcessId(process);
     CloseHandle(process);
     auto coms = AviaoSharedObjects_aviao::create(av.IDAv);
     if (!coms) {
-        tcerr << t("Erro a criar a memoria partinhada para ser recebida por este aviao.") << std::endl;
+        tcerr << t("Erro a criar a memoria partinhada para ser recebida por este aviaoInfo.") << std::endl;
         return nullptr;
     }
 
@@ -88,10 +88,10 @@ AviaoInstance::create(AviaoShare av) {
 
 
 AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMemoryMap, void *dllHandle,
-                             AviaoShare av, std::unique_ptr<AviaoSharedObjects_aviao> sharedComs,
+                             AviaoInfo av, std::unique_ptr<AviaoSharedObjects_aviao> sharedComs,
                              unsigned long id_do_aeroporto)
         : hMapFile(hMapFile), sharedMemoryMap(sharedMemoryMap), dllHandle(dllHandle),
-          id_do_aeroporto(id_do_aeroporto), aviao(av), sharedComs(std::move(sharedComs)) {
+          id_do_aeroporto(id_do_aeroporto), aviaoInfo(av), sharedComs(std::move(sharedComs)) {
     ptr_move_func = GetProcAddress((HMODULE) dllHandle, "move");
 }
 
@@ -115,25 +115,25 @@ AviaoInstance::~AviaoInstance() {
 }
 
 bool AviaoInstance::verifica_criacao_com_control() {
-    Mensagem_Control mensagemControl{};
-    mensagemControl.type = Mensagem_types::confirmar_novo_aviao;
-    mensagemControl.id_aviao = aviao.IDAv;
-    mensagemControl.mensagem.pedidoConfirmarNovoAviao.av = aviao;
+    Mensagem_Control_aviao mensagemControl{};
+    mensagemControl.type = Mensagem_aviao_types::confirmar_novo_aviao;
+    mensagemControl.id_aviao = aviaoInfo.IDAv;
+    mensagemControl.mensagem.pedidoConfirmarNovoAviao.av = aviaoInfo;
     mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto = this->id_do_aeroporto;
     _tprintf(t("fico a espera...\n"));
     auto resposta = this->sendMessage(true, mensagemControl);
 
-    if (resposta->resposta_type == lol_ok) {
+    if (resposta->resposta_type == Mensagem_aviao_resposta::lol_ok) {
 #ifdef _DEBUG
         tcout << t("[DEBUG]: Creação aceita com sucesso!") << std::endl;
 #endif
-        this->aviao.PosA.x = this->aviao.PosDest.x = resposta->msg_content.respostaNovasCoordenadas.x;
-        this->aviao.PosA.y = this->aviao.PosDest.y = resposta->msg_content.respostaNovasCoordenadas.y;
+        this->aviaoInfo.PosA.x = this->aviaoInfo.PosDest.x = resposta->msg_content.respostaNovasCoordenadas.x;
+        this->aviaoInfo.PosA.y = this->aviaoInfo.PosDest.y = resposta->msg_content.respostaNovasCoordenadas.y;
         return true;
     } else {
-        tstring causa = t("");
+        tstring causa{};
         switch (resposta->resposta_type) {
-            case aeroporto_nao_existe:
+            case Mensagem_aviao_resposta::aeroporto_nao_existe:
                 causa = t("aeroporto_nao_existe");
                 break;
             default:

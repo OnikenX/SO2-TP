@@ -47,22 +47,29 @@ GuardLock::GuardLock(GuardLock &&guard) noexcept {
 }
 
 
-SharedMemoryMap_control::SharedMemoryMap_control() : posReader(0), posWriter(0) {
-    memset(buffer_mensagens_control, 0, sizeof(Mensagem_Control) * CIRCULAR_BUFFERS_SIZE);
+
+//le um numero, returna o em resulting_value e returna se ouve um erro
+bool ler_numero(const TCHAR *string_numero, long& resulting_value) {
+    errno = 0;
+    char* p_end;
+    const long i = std::strtol(string_numero, &p_end, 10);
+    const bool range_error = errno == ERANGE;
+    if (range_error || i <= 0){
+        tcerr << "[ERROR]: Range error ou invalied number occurred(only positive numbers).";
+        return false;
+    }
+    resulting_value = i;
+    return true;
 }
 
-bool Cords::isEqual(Cords &outro) const {
-    return (this->x == outro.x && this->y == outro.y);
+DWORD WINAPI Limbo(LPVOID param) {
+#ifdef _DEBUG
+    tcout << t("[DEBUG]: waiting for death ...") << std::endl;
+#endif
+    HANDLE evento = CreateEvent(nullptr, TRUE, FALSE, EVENT_KILLER);
+    WaitForSingleObject(evento, INFINITE);
+#ifdef _DEBUG
+    tcout << t("[DEBUG]: BOOM !!X\\ RIP In Piece );") << std::endl;
+#endif
+    return 1;
 }
-
-
-CriticalSectionGuard::CriticalSectionGuard(CRITICAL_SECTION &criticalSection)
-        : criticalSection(criticalSection) {
-    EnterCriticalSection(&this->criticalSection);
-}
-
-CriticalSectionGuard::~CriticalSectionGuard() {
-    LeaveCriticalSection(&criticalSection);
-
-}
-

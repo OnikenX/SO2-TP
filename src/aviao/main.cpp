@@ -20,11 +20,11 @@ int _tmain(int argc, TCHAR *argv[]) {
 
     if (argc != 4) {
         tcerr << t("ERRO: Por favor insira argumentos da seginte maneira:\n") <<
-              t("\tSO2-TP-aviaoInstance.exe <capacidade maxima> <velocidade> <ID do aeroporto>\n");
+              t("\tSO2-TP-aviaoInfo.exe  <capacidade maxima> <velocidade> <ID do aeroporto>\n");
         return ERRO_ARGUMENTOS;
     }
 
-    AviaoShare a{};
+    AviaoInfo a{};
     a.CapMax = _tstoi(argv[1]);
     a.velocidade = _tstoi(argv[2]);
     a.IDAv = _tstol(argv[3]);

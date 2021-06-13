@@ -72,24 +72,24 @@ void Menu::run() {
 
 //
 
-void Menu::novas_cords() {
-    int idAero;
-    tstring line_input;
-    tcout << t("Insira o ID do Aeroporto distino:") << std::endl;
-    std::getline(tcin, line_input);
-    std::basic_stringstream<TCHAR> sstream(line_input);
-    sstream >> idAero;
-    Mensagem_Control mc;
-    mc.type = novo_destino;
-    mc.id_aviao = aviaoInstance.aviao.IDAv;
+    void Menu::novas_cords() {
+        int idAero;
+        tstring line_input;
+        tcout << t("Insira o ID do Aeroporto distino:") << std::endl;
+        std::getline(tcin, line_input);
+        std::basic_stringstream<TCHAR> sstream(line_input);
+        sstream >> idAero;
+        Mensagem_Control_aviao mc;
+        mc.type = Mensagem_aviao_types::novo_destino;
+        mc.id_aviao = aviaoInstance.aviaoInfo.IDAv;
     mc.mensagem.pedidoConfirmarNovoAviao.id_aeroporto = idAero;
     std::unique_ptr<Mensagem_Aviao> resposta = aviaoInstance.sendMessage(true, mc);
-    if (resposta->resposta_type == lol_ok) {
-        aviaoInstance.aviao.PosDest.x = resposta->msg_content.respostaNovasCoordenadas.x;
-        aviaoInstance.aviao.PosDest.y = resposta->msg_content.respostaNovasCoordenadas.y;
-    } else if (resposta->resposta_type == MAX_Atingido) {
+    if (resposta->resposta_type == Mensagem_aviao_resposta::lol_ok) {
+        aviaoInstance.aviaoInfo.PosDest.x = resposta->msg_content.respostaNovasCoordenadas.x;
+        aviaoInstance.aviaoInfo.PosDest.y = resposta->msg_content.respostaNovasCoordenadas.y;
+    } else if (resposta->resposta_type == Mensagem_aviao_resposta::MAX_Atingido) {
         tcout << t("O Maximo de Aviões foi atingido, e não temos mais copões para MALLOCS, logo azar") << std::endl;
-    } else if (resposta->resposta_type == Porta_Fechada) {
+    } else if (resposta->resposta_type ==Mensagem_aviao_resposta::Porta_Fechada) {
         tcout << t("Desculpe informar, mas neste Aeroporto trabalham funcionarios publicos") << std::endl;
     } else {
         tcout << t("Esse Aeroporto não existe, mas se quiseres eu posso ser o teu Aeroporto XD") << std::endl;
@@ -102,26 +102,25 @@ void Menu::novas_cords() {
 DWORD WINAPI ThreadVoa(LPVOID param) {
     AviaoInstance &aviao = *(AviaoInstance *) param;
     int cond, newX, newY;
-    Mensagem_Control mc;
-    mc.type = alterar_coords;
-    mc.id_aviao = aviao.aviao.IDAv;
+    Mensagem_Control_aviao mc{};
+    mc.type = Mensagem_aviao_types::alterar_coords;
+    mc.id_aviao = aviao.aviaoInfo.IDAv;
     do {
-        for (int i = 0; i < aviao.aviao.velocidade; i++) {
-            cond = aviao.move(aviao.aviao.PosA.x, aviao.aviao.PosA.y, aviao.aviao.PosDest.x, aviao.aviao.PosDest.y,
+        for (int i = 0; i < aviao.aviaoInfo.velocidade; i++) {
+            cond = aviao.move(aviao.aviaoInfo.PosA.x, aviao.aviaoInfo.PosA.y, aviao.aviaoInfo.PosDest.x, aviao.aviaoInfo.PosDest.y,
                               &newX, &newY);
             mc.mensagem.pedidoConfirmarMovimento.x = newX;
             mc.mensagem.pedidoConfirmarMovimento.y = newY;
             std::unique_ptr<Mensagem_Aviao> resposta = aviao.sendMessage(true, mc);
             //recebe msg
-            if (resposta->resposta_type == lol_ok) {
-                aviao.aviao.PosA.x = newX;
-                aviao.aviao.PosA.y = newY;
+            if (resposta->resposta_type == Mensagem_aviao_resposta::lol_ok) {
+                aviao.aviaoInfo.PosA.x = newX;
+                aviao.aviaoInfo.PosA.y = newY;
             } else {
                 tcout << t("não houve movimento, ou havia algo a estrovar ou a piloto adormeceu") << std::endl;
             }
-
-            tcout << t("X: ") << aviao.aviao.PosA.x << t("\tY: ") << aviao.aviao.PosA.y << t("\t\t X: ")
-                  << aviao.aviao.PosDest.x << t("\tY: ") << aviao.aviao.PosDest.y << std::endl;
+            tcout << t("X: ") << aviao.aviaoInfo.PosA.x << t("\tY: ") << aviao.aviaoInfo.PosA.y << t("\t\t X: ")
+                  << aviao.aviaoInfo.PosDest.x << t("\tY: ") << aviao.aviaoInfo.PosDest.y << std::endl;
             if (cond == 0) {
                 break;
             }
@@ -134,12 +133,11 @@ DWORD WINAPI ThreadVoa(LPVOID param) {
     tcout << t("Chegou vivo ao seu destino, clique em qualquer botão para voltar ao menu inicial.") << std::endl;
 
     return 1;
-
 }
 
 void Menu::inicia_voo() {
 
-    if (aviaoInstance.aviao.PosA.isEqual(aviaoInstance.aviao.PosDest)) {
+    if (aviaoInstance.aviaoInfo.PosA.isEqual(aviaoInstance.aviaoInfo.PosDest)) {
         tcout << t("Não é muito interessante voar para onde já esta") << std::endl;
         return;
     }
