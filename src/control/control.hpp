@@ -120,7 +120,7 @@ struct Control {
     //verifica se existe um aviaoInfo na mesma localizaao
     bool existeAlguem(Mensagem_Aviao_request &mensagemControl);
 
-    bool verificaAeroporto_e_atualizaSeAviao(Mensagem_Aviao_request &mensagemControl, Mensagem_Aviao_response *mensagemAviao);
+    bool verificaAeroporto_e_atualizaSeAviao(Mensagem_Aviao_request &aviaoRequest, Mensagem_Aviao_response *aviaoResponse);
 
     Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
             SharedMemoryMap_control *view_of_file_pointer, CRITICAL_SECTION critical_section_interno);

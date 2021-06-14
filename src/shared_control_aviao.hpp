@@ -48,6 +48,10 @@ struct Cords {
     bool isEqual(Cords &outro) const;
 };
 
+#define Resposta_Novas_Coordenadas Cords
+#define Pedido_mover Cords
+
+
 struct AviaoInfo {
     unsigned long IDAv;
     int CapMax;
@@ -71,10 +75,6 @@ enum class Mensagem_aviao_request_types {
     embarcacao,
 };
 
-struct Pedido_mover {
-    unsigned int x;
-    unsigned int y;
-};
 
 struct Pedido_info_aeroporto {
     unsigned long id_aeroporto;
@@ -98,10 +98,6 @@ struct Mensagem_Aviao_request {//o aviaoInfo envia isto
 };
 
 
-struct Resposta_Novas_Coordenadas {
-    unsigned int x;
-    unsigned int y;
-};
 
 union Mensagem_Aviao_union {
     Resposta_Novas_Coordenadas respostaNovasCoordenadas;

@@ -50,7 +50,7 @@ void Menu::run() {
 
             case 1:
 
-                novas_cords();
+                novo_destino();
                 break;
 
 
@@ -79,21 +79,20 @@ void Menu::run() {
 
 //
 
-void Menu::novas_cords() {
+void Menu::novo_destino() {
     int idAero;
     tstring line_input;
     tcout << t("Insira o ID do Aeroporto distino:") << std::endl;
     std::getline(tcin, line_input);
     std::basic_stringstream<TCHAR> sstream(line_input);
     sstream >> idAero;
-    Mensagem_Aviao_request mc;
+    Mensagem_Aviao_request mc{};
     mc.type = Mensagem_aviao_request_types::novo_destino;
     mc.id_aviao = aviaoInstance.aviaoInfo.IDAv;
     mc.mensagem.info_aeroportos.id_aeroporto = idAero;
     std::unique_ptr<Mensagem_Aviao_response> resposta = aviaoInstance.sendMessage(true, mc);
     if (resposta->resposta_type == Mensagem_Aviao_response_type::lol_ok) {
-        aviaoInstance.aviaoInfo.PosDest.x = resposta->msg_content.respostaNovasCoordenadas.x;
-        aviaoInstance.aviaoInfo.PosDest.y = resposta->msg_content.respostaNovasCoordenadas.y;
+        aviaoInstance.aviaoInfo.PosDest = resposta->msg_content.respostaNovasCoordenadas;
     } else if (resposta->resposta_type == Mensagem_Aviao_response_type::MAX_Atingido) {
         tcout << t("O Maximo de Aviões foi atingido, e não temos mais copões para MALLOCS, logo azar") << std::endl;
     } else if (resposta->resposta_type == Mensagem_Aviao_response_type::Porta_Fechada) {
@@ -115,8 +114,7 @@ DWORD WINAPI ThreadVoa(LPVOID param) {
     do {
         for (int i = 0; i < aviao.aviaoInfo.velocidade; i++) {
             cond = aviao.move(aviao.aviaoInfo.PosA.x, aviao.aviaoInfo.PosA.y, aviao.aviaoInfo.PosDest.x,
-                              aviao.aviaoInfo.PosDest.y,
-                              &newX, &newY);
+                              aviao.aviaoInfo.PosDest.y, &newX, &newY);
             mc.mensagem.coordenadas_movimento.x = newX;
             mc.mensagem.coordenadas_movimento.y = newY;
             std::unique_ptr<Mensagem_Aviao_response> resposta = aviao.sendMessage(true, mc);

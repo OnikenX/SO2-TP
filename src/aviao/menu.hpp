@@ -10,7 +10,7 @@ struct Menu
     Menu &operator=(const Menu &) = delete; // non copyable
     int counter_aeroporto;
     AviaoInstance& aviaoInstance;
-    void novas_cords();
+    void novo_destino();
     void inicia_voo();
     void suicidio();
     void embarcar_passageiros() const;
