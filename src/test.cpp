@@ -59,10 +59,7 @@ struct tester{
 };
 
 int main() {
-    tester inst;
-    std::list<tester> insts1;
-    std::list<tester> insts2;
-    insts1.emplace_back(std::move(inst));
-    insts2.splice(insts2.begin(), insts1, insts1.begin());
-    tcin.get();
+    std::list<int> insts1{1,2,3,4,5,6,7,8,9,0};
+    std::list<int> insts2;
+
 }

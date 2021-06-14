@@ -133,3 +133,4 @@ struct Control {
     bool aceita_avioes;
 };
 
+bool SendMessagePipe(HANDLE hPipe, Mensagem_Passageiro_response &passageiroResponse);

@@ -71,6 +71,8 @@ DWORD WINAPI PipeClient(LPVOID param) {
 #ifdef _DEBUG
     tcerr<< t("[DEBUG]: Connected with sucess!!\n");
 #endif
+
+
     HANDLE threads[] = {
             CreateThread(nullptr, 0, InputWaiter, nullptr, 0, nullptr),
             CreateThread(nullptr, 0, Limbo, nullptr, 0, nullptr),
@@ -187,11 +189,15 @@ DWORD WINAPI GetMessages(LPVOID lpparam) {
         switch (passageiroResponse.resposta_type) {
             case Mensagem_passageiro_response_type::desembarcado: {
                 tcout << t("Desembarcou.\n");
-                return 0;
+                break;
             }
             case Mensagem_passageiro_response_type::embarcado: {
                 tcout << t("Embarcou.\n");
                 break;
+            }
+            case  Mensagem_passageiro_response_type::desembarcado_no_destino:{
+                tcout << t("Desembarcou no destino.\n");
+                return 0;
             }
             default:
                 tcout << t("[ERROR]: Mensagem não possivel.\n");

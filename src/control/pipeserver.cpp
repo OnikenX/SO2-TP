@@ -183,7 +183,7 @@ bool SendMessagePipe(HANDLE hPipe, Mensagem_Passageiro_response &passageiroRespo
             nullptr);       // not overlapped I/O
     auto lastError = GetLastError();
     if (!fSuccess || cbWritten == 0 || lastError == ERROR_BROKEN_PIPE) {
-        _tprintf(TEXT("SendMessagePipe() => WriteFile() failed, GLE=%d.\n"), GetLastError());
+        _tprintf(TEXT("SendMessagePipe() => WriteFile() failed, GLE=%lu.\n"), GetLastError());
         return false;
     }
     return true;

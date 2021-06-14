@@ -31,6 +31,7 @@ enum class Mensagem_passageiro_response_type : uint8_t {
     embarcado,
     timeout,
     desembarcado,
+    desembarcado_no_destino,
 };
 //mensagens que devem ser enviadas para o passageiro
 struct Mensagem_Passageiro_response{
