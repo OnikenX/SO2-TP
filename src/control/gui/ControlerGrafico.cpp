@@ -2,7 +2,7 @@
 //
 
 #include "framework.h"
-#include "control.hpp"
+#include "../control.hpp"
 #include <strsafe.h>
 
 #define MAX_LOADSTRING 100
@@ -212,16 +212,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             HDC hdc = BeginPaint(hWnd, &ps);
             TextOut(hdc, 500, 500, msg_text, _tcslen(msg_text));
             auto guard = CriticalSectionGuard(menu->control.critical_section_interno);
-            for (int i = 0; i < menu->control.aeroportos.size(); i++) {
-                TextOut(hdc, menu->control.aeroportos[i].pos.x, menu->control.aeroportos[i].pos.y, menu->control.aeroportos[i].nome, 1);
-            }
+            
            // int i = 0;
-
+            FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
             for (auto& aviao : menu->control.avioes)
             {
                 TextOut(hdc, aviao.PosA.x, aviao.PosA.y, t("A"), 1);
             }
-
+            for (int i = 0; i < menu->control.aeroportos.size(); i++) {
+                TextOut(hdc, menu->control.aeroportos[i].pos.x, menu->control.aeroportos[i].pos.y, menu->control.aeroportos[i].nome, 1);
+            }
             // TODO: Add any drawing code that uses hdc here...
             EndPaint(hWnd, &ps);
         }
@@ -339,7 +339,7 @@ INT_PTR CALLBACK ListaPassageiros(HWND hDlg, UINT message,
     case WM_INITDIALOG:
     {
         // Add items to list.
-        HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
+        HWND hwndList = GetDlgItem(hDlg, IDC_ListPassageiros);
         int i = 0;
         auto guard = CriticalSectionGuard(menu->control.critical_section_interno);
         for (auto& pass : menu->control.passageiros)
@@ -368,13 +368,13 @@ INT_PTR CALLBACK ListaPassageiros(HWND hDlg, UINT message,
             EndDialog(hDlg, LOWORD(wParam));
             return TRUE;
 
-        case IDC_ListAeroportos:
+        case IDC_ListPassageiros:
         {
             switch (HIWORD(wParam))
             {
             case LBN_SELCHANGE:
             {
-                HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
+                HWND hwndList = GetDlgItem(hDlg, IDC_ListPassageiros);
 
                 // Get selected index.
                 int lbItem = (int)SendMessage(hwndList, LB_GETCURSEL, 0, 0);
@@ -391,7 +391,7 @@ INT_PTR CALLBACK ListaPassageiros(HWND hDlg, UINT message,
                             pass.info.id_aeroporto_origem << t("\nAeroporto Destino->") << pass.info.id_aeroporto_destino;
                         tstring buff = stream.str();
 
-                        SetDlgItemText(hDlg, IDC_STATIC, buff.c_str());
+                        SetDlgItemText(hDlg, IDC_STATICpas, buff.c_str());
                         return TRUE;
                     }
                     j++;
@@ -416,7 +416,7 @@ INT_PTR CALLBACK ListaAvioes(HWND hDlg, UINT message,
     case WM_INITDIALOG:
     {
         // Add items to list.
-        HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
+        HWND hwndList = GetDlgItem(hDlg, IDC_ListAvioes);
         int i=0;
         auto guard = CriticalSectionGuard(menu->control.critical_section_interno);
         for (auto& aviao : menu->control.avioes)
@@ -445,13 +445,13 @@ INT_PTR CALLBACK ListaAvioes(HWND hDlg, UINT message,
             EndDialog(hDlg, LOWORD(wParam));
             return TRUE;
 
-        case IDC_ListAeroportos:
+        case IDC_ListAvioes:
         {
             switch (HIWORD(wParam))
             {
             case LBN_SELCHANGE:
             {
-                HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
+                HWND hwndList = GetDlgItem(hDlg, IDC_ListAvioes);
 
                 // Get selected index.
                 int lbItem = (int)SendMessage(hwndList, LB_GETCURSEL, 0, 0);
@@ -465,11 +465,11 @@ INT_PTR CALLBACK ListaAvioes(HWND hDlg, UINT message,
                         //TCHAR buff[MAX_PATH];
                         tstringstream stream;
                         stream << t("ID: ") << aviao.IDAv << t("\nVelocidade->") << aviao.velocidade <<
-                            t("\tCapaxidadeMax->") << aviao.CapMax << t("\nPosição Atual: X-> ") << aviao.PosA.x << t("\tY-> ")
+                            t("\tCapaxidadeMax->") << aviao.CapMax << t("\nPosição Atual:\n X-> ") << aviao.PosA.x << t("\tY-> ")
                                 << aviao.PosA.y << "\nPosição Destino: X-> "<< aviao.PosDest.x<<"\tY-> " << aviao.PosDest.y;
                         tstring buff = stream.str();
 
-                        SetDlgItemText(hDlg, IDC_STATIC, buff.c_str());
+                        SetDlgItemText(hDlg, IDC_STATICav, buff.c_str());
                         return TRUE;
                     }
                     j++;
@@ -564,7 +564,6 @@ bool Menu::cria_aeroporto() {
     }
     return aeroporto_near;
 
-    }
 }
 
 void Menu::desativa_novos_avioes() {

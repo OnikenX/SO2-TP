@@ -28,6 +28,8 @@
 #define IDC_ListAeroportos              1010
 #define IDC_ListAvioes                  1012
 #define IDC_STATICav                    1013
+#define IDC_ListPassageiros             1014
+#define IDC_STATICpas                   1015
 #define ID_FILE_CIARAEROPORTO           32771
 #define ID_FILE_CONSULTAR               32772
 #define ID_CONSULTAR_AEROPORTO          32773
@@ -49,7 +51,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1014
+#define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

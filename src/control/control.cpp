@@ -144,6 +144,8 @@ bool Control::existeAlguem(Mensagem_Aviao_request &mensagemControl) {
     auto guard = CriticalSectionGuard(critical_section_interno);
     for (auto &a: avioes) {
         if (a.PosA.isEqual(mensagemControl.mensagem.coordenadas_movimento)) {
+            a.PosA.x++;
+            a.PosA.y++;
             return true;
         }
     }
