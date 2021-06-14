@@ -290,7 +290,7 @@ namespace tratadores_de_mensagens {
         }
 
 
-       bool meter_passageiros_no_aviao(Control &control, std::list<Passageiro> &tmp_passg, unsigned long id_aviao, int & npassageiros, AviaoSharedObjects_control ** coms) {
+       bool meter_passageiros_no_aviao(Control &control, std::list<Passageiro> &tmp_passg, unsigned long id_aviao,AviaoSharedObjects_control ** coms) {
             auto guard = CriticalSectionGuard(control.critical_section_interno);
             auto aviao = std::find_if(control.avioes.begin(), control.avioes.end(),
                                       [&](auto &aviao) { return aviao.IDAv == id_aviao; });
@@ -320,9 +320,10 @@ namespace tratadores_de_mensagens {
             aviaoResponse.resposta_type = Mensagem_Aviao_response_type::lol_ok;
             embarcacao_funcs::adiciona_lista(control, tmp_passg, posA, posDest);
             embarcacao_funcs::avisa_passageiros(control, tmp_passg);
-            int passageiros = 0;
+
+            aviaoResponse.msg_content.passageiros_embarcados = tmp_passg.size();
             AviaoSharedObjects_control * coms = nullptr;
-            if(embarcacao_funcs::meter_passageiros_no_aviao(control, tmp_passg, aviaoRequest.id_aviao, passageiros, &coms))
+            if(embarcacao_funcs::meter_passageiros_no_aviao(control, tmp_passg, aviaoRequest.id_aviao,  &coms))
                 sendMessage(*coms,  aviaoResponse);
         }
     }
