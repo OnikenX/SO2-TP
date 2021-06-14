@@ -41,7 +41,8 @@ struct AviaoInstance {
     int move(int cur_x, int cur_y, int final_dest_x, int final_dest_y, int *next_x, int *next_y) const;
     int run();
     ~AviaoInstance();
-    std::unique_ptr<Mensagem_Aviao_response> sendMessage(bool recebeResposta, Mensagem_Aviao_request &mensagemControl);
+    std::unique_ptr<Mensagem_Aviao_response> sendMessage(bool recebeResposta, Mensagem_Aviao_request &aviaoRequest) const;
     void suicidio();
+    int embarcados;
 };
 

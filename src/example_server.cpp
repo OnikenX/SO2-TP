@@ -135,7 +135,7 @@ DWORD WINAPI InstanceThread(LPVOID lpvParam)
     hPipe = (HANDLE) lpvParam;
 
 // Loop until done reading
-    while (1)
+    while (true)
     {
         // Read client requests from the pipe. This simplistic code only allows messages
         // up to BUFSIZE characters in length.
@@ -144,7 +144,7 @@ DWORD WINAPI InstanceThread(LPVOID lpvParam)
                 pchRequest,    // buffer to receive data
                 BUFSIZE*sizeof(TCHAR), // size of buffer
                 &cbBytesRead, // number of bytes read
-                NULL);        // not overlapped I/O
+                nullptr);        // not overlapped I/O
 
         if (!fSuccess || cbBytesRead == 0)
         {
@@ -168,7 +168,7 @@ DWORD WINAPI InstanceThread(LPVOID lpvParam)
                 pchReply,     // buffer to write from
                 cbReplyBytes, // number of bytes to write
                 &cbWritten,   // number of bytes written
-                NULL);        // not overlapped I/O
+                nullptr);        // not overlapped I/O
 
         if (!fSuccess || cbReplyBytes != cbWritten)
         {

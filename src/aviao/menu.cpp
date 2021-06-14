@@ -54,7 +54,7 @@ void Menu::run() {
                 break;
 
 
-            case 2:{
+            case 2: {
                 inicia_voo();
                 WaitForSingleObject(this->aviaoInstance.sharedComs->mutex_em_andamento, INFINITE);
                 if (aviaoInstance.em_andamento)
@@ -65,7 +65,7 @@ void Menu::run() {
             }
 
 
-            case 3:{
+            case 3: {
                 embarcar_passageiros();
             }
 
@@ -79,17 +79,17 @@ void Menu::run() {
 
 //
 
-    void Menu::novas_cords() {
-        int idAero;
-        tstring line_input;
-        tcout << t("Insira o ID do Aeroporto distino:") << std::endl;
-        std::getline(tcin, line_input);
-        std::basic_stringstream<TCHAR> sstream(line_input);
-        sstream >> idAero;
-        Mensagem_Aviao_request mc;
-        mc.type = Mensagem_aviao_request_types::novo_destino;
-        mc.id_aviao = aviaoInstance.aviaoInfo.IDAv;
-    mc.mensagem.pedidoConfirmarNovoAviao.id_aeroporto = idAero;
+void Menu::novas_cords() {
+    int idAero;
+    tstring line_input;
+    tcout << t("Insira o ID do Aeroporto distino:") << std::endl;
+    std::getline(tcin, line_input);
+    std::basic_stringstream<TCHAR> sstream(line_input);
+    sstream >> idAero;
+    Mensagem_Aviao_request mc;
+    mc.type = Mensagem_aviao_request_types::novo_destino;
+    mc.id_aviao = aviaoInstance.aviaoInfo.IDAv;
+    mc.mensagem.info_aeroportos.id_aeroporto = idAero;
     std::unique_ptr<Mensagem_Aviao_response> resposta = aviaoInstance.sendMessage(true, mc);
     if (resposta->resposta_type == Mensagem_Aviao_response_type::lol_ok) {
         aviaoInstance.aviaoInfo.PosDest.x = resposta->msg_content.respostaNovasCoordenadas.x;
@@ -114,10 +114,11 @@ DWORD WINAPI ThreadVoa(LPVOID param) {
     mc.id_aviao = aviao.aviaoInfo.IDAv;
     do {
         for (int i = 0; i < aviao.aviaoInfo.velocidade; i++) {
-            cond = aviao.move(aviao.aviaoInfo.PosA.x, aviao.aviaoInfo.PosA.y, aviao.aviaoInfo.PosDest.x, aviao.aviaoInfo.PosDest.y,
+            cond = aviao.move(aviao.aviaoInfo.PosA.x, aviao.aviaoInfo.PosA.y, aviao.aviaoInfo.PosDest.x,
+                              aviao.aviaoInfo.PosDest.y,
                               &newX, &newY);
-            mc.mensagem.pedidoConfirmarMovimento.x = newX;
-            mc.mensagem.pedidoConfirmarMovimento.y = newY;
+            mc.mensagem.coordenadas_movimento.x = newX;
+            mc.mensagem.coordenadas_movimento.y = newY;
             std::unique_ptr<Mensagem_Aviao_response> resposta = aviao.sendMessage(true, mc);
             //recebe msg
             if (resposta->resposta_type == Mensagem_Aviao_response_type::lol_ok) {
@@ -166,6 +167,11 @@ void Menu::suicidio() {
     //fechar tudo e mandar msg_content a avisar
 }
 
-void Menu::embarcar_passageiros() {
-    Mensagem_Aviao_response
+void Menu::embarcar_passageiros() const {
+    Mensagem_Aviao_request aviaoRequest{};
+    aviaoRequest.type = Mensagem_aviao_request_types::embarcacao;
+    aviaoRequest.mensagem.info_aeroportos.aviaoInfo = aviaoInstance.aviaoInfo;
+    aviaoRequest.id_aviao = aviaoInstance.aviaoInfo.IDAv;
+    auto received = aviaoInstance.sendMessage(true, aviaoRequest);
+    received->msg_content.passageiros_embarcados = aviaoInstance.embarcados;
 }

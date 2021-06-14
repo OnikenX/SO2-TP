@@ -67,7 +67,8 @@ enum class Mensagem_aviao_request_types {
     alterar_coords,
     novo_destino,
     suicidio,
-    ping
+    ping,
+    embarcacao,
 };
 
 struct Pedido_mover {
@@ -77,14 +78,14 @@ struct Pedido_mover {
 
 struct Pedido_info_aeroporto {
     unsigned long id_aeroporto;
-    AviaoInfo av;
+    AviaoInfo aviaoInfo;
 };
 
 
 //union dos possiveis dados a enviar do control para o aviao
 union Mensagem_Control_aviao_union {
-    Pedido_info_aeroporto pedidoConfirmarNovoAviao;
-    Pedido_mover pedidoConfirmarMovimento;
+    Pedido_info_aeroporto info_aeroportos;
+    Pedido_mover coordenadas_movimento;
 };
 
 
@@ -104,6 +105,7 @@ struct Resposta_Novas_Coordenadas {
 
 union Mensagem_Aviao_union {
     Resposta_Novas_Coordenadas respostaNovasCoordenadas;
+    int passageiros_embarcados;
 };
 
 //respostas que o control envia

@@ -93,7 +93,6 @@ DWORD WINAPI PipeServer(LPVOID param) {
 }
 
 
-
 DWORD WINAPI InstanceThread(LPVOID lpvParam)
 // This routine is a thread processing function to read from and reply to a client
 // via the open pipe connection passed from the main loop. Note this allows
@@ -177,11 +176,11 @@ DWORD WINAPI InstanceThread(LPVOID lpvParam)
 bool SendMessagePipe(HANDLE hPipe, Mensagem_Passageiro_response &passageiroResponse) {
     DWORD cbWritten;
     bool fSuccess = WriteFile(
-            hPipe,        // handle to pipe
-            &passageiroResponse,     // buffer to write from
+            hPipe,                         // handle to pipe
+            &passageiroResponse,          // buffer to write from
             sizeof(Mensagem_Passageiro_response), // number of bytes to write
-            &cbWritten,   // number of bytes written
-            nullptr);        // not overlapped I/O
+            &cbWritten,                 // number of bytes written
+            nullptr);       // not overlapped I/O
     auto lastError = GetLastError();
     if (!fSuccess || cbWritten == 0 || lastError == ERROR_BROKEN_PIPE) {
         _tprintf(TEXT("SendMessagePipe() => WriteFile() failed, GLE=%d.\n"), GetLastError());

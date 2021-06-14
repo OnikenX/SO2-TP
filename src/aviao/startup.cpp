@@ -91,7 +91,7 @@ AviaoInstance::AviaoInstance(HANDLE hMapFile, SharedMemoryMap_control *sharedMem
                              AviaoInfo av, std::unique_ptr<AviaoSharedObjects_aviao> sharedComs,
                              unsigned long id_do_aeroporto)
         : hMapFile(hMapFile), sharedMemoryMap(sharedMemoryMap), dllHandle(dllHandle),
-          id_do_aeroporto(id_do_aeroporto), aviaoInfo(av), sharedComs(std::move(sharedComs)) {
+          id_do_aeroporto(id_do_aeroporto), aviaoInfo(av), sharedComs(std::move(sharedComs)), embarcados(0) {
     ptr_move_func = GetProcAddress((HMODULE) dllHandle, "move");
 }
 
@@ -118,8 +118,8 @@ bool AviaoInstance::verifica_criacao_com_control() {
     Mensagem_Aviao_request mensagemControl{};
     mensagemControl.type = Mensagem_aviao_request_types::confirmar_novo_aviao;
     mensagemControl.id_aviao = aviaoInfo.IDAv;
-    mensagemControl.mensagem.pedidoConfirmarNovoAviao.av = aviaoInfo;
-    mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto = this->id_do_aeroporto;
+    mensagemControl.mensagem.info_aeroportos.aviaoInfo = aviaoInfo;
+    mensagemControl.mensagem.info_aeroportos.id_aeroporto = this->id_do_aeroporto;
     _tprintf(t("fico a espera...\n"));
     auto resposta = this->sendMessage(true, mensagemControl);
 

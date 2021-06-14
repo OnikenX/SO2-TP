@@ -8,7 +8,7 @@ DWORD WINAPI InputWaiter(LPVOID param);
 
 int8_t confirm_ids(HANDLE hPipe, PassageiroInstance &passageiro);
 
-DWORD WINAPI GetMessages(LPVOID hPipe);
+DWORD WINAPI GetMessages(LPVOID lpparam);
 
 DWORD WINAPI PipeClient(LPVOID param) {
     auto &passageiro = *(PassageiroInstance *) param;
@@ -59,7 +59,7 @@ DWORD WINAPI PipeClient(LPVOID param) {
             nullptr,     // don't set maximum bytes
             nullptr);    // don't set maximum time
     if (!fSuccess) {
-        _tprintf(TEXT("[ERROR]: SetNamedPipeHandleState failed. GLE=%d\n"), GetLastError());
+        _tprintf(TEXT("[ERROR]: SetNamedPipeHandleState failed. GLE=%lu\n"), GetLastError());
         return -1;
     }
 
@@ -98,7 +98,7 @@ int8_t confirm_ids(HANDLE hPipe, PassageiroInstance &passageiro) {
             nullptr);                  // not overlapped
 
     if (!fSuccess) {
-        _tprintf(TEXT("WriteFile to pipe failed. GLE=%d\n"), GetLastError());
+        _tprintf(TEXT("WriteFile to pipe failed. GLE=%lu\n"), GetLastError());
         return -1;
     }
 
@@ -139,8 +139,7 @@ int8_t confirm_ids(HANDLE hPipe, PassageiroInstance &passageiro) {
 
 //waits for sweet taste of death from the keyboard
 DWORD WINAPI InputWaiter(LPVOID param) {
-    bool exit = false;
-    while (!exit) {
+    while (true) {
         tstring string_line{};
         std::getline(tcin, string_line);
         tstringstream stream(string_line);

@@ -32,13 +32,37 @@
 #include <iostream>
 #include <WINDOWS.h>
 #include <utils.hpp>
+#include <list>
+
+
+struct tester{
+    bool moved = false;
+    tester(){tcout <<t("contructed") << std::endl;}
+    tester(tester& other){
+        tcout << t("reference constructor") << std::endl;;
+    }
+
+    tester(tester const &other){
+        tcout << t("copy constructor") << std::endl;;
+    }
+
+    tester(tester&& other) noexcept {
+        tcout << t("moved") << std::endl;;
+        moved = true;
+    }
+    ~tester(){
+        if(!moved){
+            tcout << t("deleted stuff") << std::endl;;
+        }else
+            tcout << t("this was moved correctly") << std::endl;;
+    };
+};
 
 int main() {
-    long numero = 19;
-
-    tstringstream stream;
-    stream << 19;
-    tstring s = stream.str();
-    tcout << s << std::endl;
-
+    tester inst;
+    std::list<tester> insts1;
+    std::list<tester> insts2;
+    insts1.emplace_back(std::move(inst));
+    insts2.splice(insts2.begin(), insts1, insts1.begin());
+    tcin.get();
 }

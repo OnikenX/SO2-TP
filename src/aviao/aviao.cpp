@@ -20,14 +20,14 @@ DWORD WINAPI ThreadMenu(LPVOID param) {
     return 1;
 }
 
-std::unique_ptr<Mensagem_Aviao_response> AviaoInstance::sendMessage(bool recebeResposta, Mensagem_Aviao_request &mensagemControl) {
+std::unique_ptr<Mensagem_Aviao_response> AviaoInstance::sendMessage(bool recebeResposta, Mensagem_Aviao_request &aviaoRequest) const {
     //nao deixa ninguem enviar mensagens ao mesmo tempo na mesma thread
     auto guard = GuardLock(this->sharedComs->mutex_mensagens);
 
     WaitForSingleObject(shared_control_aviao::get()->semaforo_write_control_aviao, INFINITE);
     WaitForSingleObject(shared_control_aviao::get()->mutex_partilhado, INFINITE);
 
-    CopyMemory(&this->sharedMemoryMap->buffer_mensagens_control[this->sharedMemoryMap->posWriter], &mensagemControl, sizeof(Mensagem_Aviao_request));
+    CopyMemory(&this->sharedMemoryMap->buffer_mensagens_control[this->sharedMemoryMap->posWriter], &aviaoRequest, sizeof(Mensagem_Aviao_request));
     this->sharedMemoryMap->posWriter++;
 
     if(this->sharedMemoryMap->posWriter == CIRCULAR_BUFFERS_SIZE)

@@ -46,7 +46,7 @@ Control::verificaAeroporto_e_atualizaSeAviao(Mensagem_Aviao_request &mensagemCon
     auto guard = CriticalSectionGuard(critical_section_interno);
 
     auto result = std::find_if(std::begin(aeroportos), std::end(aeroportos), [&](Aeroporto &a) {
-        return a.IDAero == mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto;
+        return a.IDAero == mensagemControl.mensagem.info_aeroportos.id_aeroporto;
     });
     if (result != std::end(aeroportos)) {
         if (mensagemAviao) {
@@ -63,7 +63,7 @@ void confirmarNovoAviao(Control &control, Mensagem_Aviao_request &mensagemContro
     Mensagem_Aviao_response mensagemAviao{};
 #ifdef _DEBUG
     tcout << t("[DEBUG]: Recebido pedido de novo aviaoInfo para o aeroporto ")
-          << mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto << std::endl;
+          << mensagemControl.mensagem.info_aeroportos.id_aeroporto << std::endl;
 #endif
     auto coms = AviaoSharedObjects_control::create(mensagemControl.id_aviao);
 
@@ -94,7 +94,7 @@ void confirmarNovoAviao(Control &control, Mensagem_Aviao_request &mensagemContro
         } else if (control.avioes.size() >= control.MAX_AVIOES) {
             mensagemAviao.resposta_type = Mensagem_Aviao_response_type::MAX_Atingido;
         } else if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, &mensagemAviao)) {
-            control.avioes.emplace_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av, std::move(coms.value()));
+            control.avioes.emplace_back(mensagemControl.mensagem.info_aeroportos.aviaoInfo, std::move(coms.value()));
             mensagemAviao.resposta_type = Mensagem_Aviao_response_type::lol_ok;
 #ifdef _DEBUG
             tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" aceite.") << std::endl;
@@ -125,8 +125,8 @@ void novoDestino(Control &control, Mensagem_Aviao_request &mensagemControl) {
 bool Control::existeAlguem(Mensagem_Aviao_request &mensagemControl) {
     auto guard = CriticalSectionGuard(critical_section_interno);
     for (auto &a: avioes) {
-        if (a.PosA.y == mensagemControl.mensagem.pedidoConfirmarMovimento.y &&
-            a.PosA.x == mensagemControl.mensagem.pedidoConfirmarMovimento.x) {
+        if (a.PosA.y == mensagemControl.mensagem.coordenadas_movimento.y &&
+            a.PosA.x == mensagemControl.mensagem.coordenadas_movimento.x) {
             return true;
         }
     }
@@ -166,10 +166,10 @@ void mensagem_recebe(Mensagem_Aviao_request &mensagemControl,
     ReleaseSemaphore(locks.semaforo_write_control_aviao, 1, nullptr);
 }
 
-void pingUpdate(Control &control, Mensagem_Aviao_request &mensagemControl) {
+void pingUpdate(Control &control, Mensagem_Aviao_request &aviaoRequest) {
     auto guard = CriticalSectionGuard(control.critical_section_interno);
     auto aviao = std::find_if(control.avioes.begin(), control.avioes.end(), [&](aviao_in_controlstorage &aviao) {
-        return aviao.IDAv == mensagemControl.id_aviao;
+        return aviao.IDAv == aviaoRequest.id_aviao;
     });
     if (aviao != control.avioes.end())
         aviao->update_time();
@@ -177,33 +177,42 @@ void pingUpdate(Control &control, Mensagem_Aviao_request &mensagemControl) {
         tcout << t("Aviao not found for update.\n");
 }
 
-void mensagem_trata(Control &control, Mensagem_Aviao_request &mensagemControl) {
+void embarcacao(Control &control, Mensagem_Aviao_request &aviaoRequest){
+    auto guard = CriticalSectionGuard(control.critical_section_interno);
+
+}
+
+void mensagem_trata(Control &control, Mensagem_Aviao_request &aviaoRequest) {
     const TCHAR *type_string;
-    switch (mensagemControl.type) {
+    switch (aviaoRequest.type) {
         case Mensagem_aviao_request_types::confirmar_novo_aviao: {
             type_string = t("confirmar_novo_aviao");
-            confirmarNovoAviao(control, mensagemControl);
+            confirmarNovoAviao(control, aviaoRequest);
             break;
         }
         case Mensagem_aviao_request_types::alterar_coords: {
             type_string = t("alterar_coords");
-            alterarCoords(control, mensagemControl);
+            alterarCoords(control, aviaoRequest);
             break;
         }
         case Mensagem_aviao_request_types::ping: {
             type_string = t("ping");
-            pingUpdate(control, mensagemControl);
+            pingUpdate(control, aviaoRequest);
             break;
         }
         case Mensagem_aviao_request_types::novo_destino: {
             type_string = t("novo_destino\"");
-            novoDestino(control, mensagemControl);
+            novoDestino(control, aviaoRequest);
             break;
         }
         case Mensagem_aviao_request_types::suicidio: {
             type_string = t("suicidio");
-            killMe(control, mensagemControl);
+            killMe(control, aviaoRequest);
             break;
+        }case Mensagem_aviao_request_types::embarcacao{
+                    type_string = t("embarcacao");
+                    embarcacao(control, aviaoRequest);
+                    break;
         }
         default:
             type_string = t("undefined");

@@ -4,7 +4,7 @@ project(SO2-TP)
 set(CMAKE_CXX_STANDARD 20)
 
 # activa o unicode para o TCHAR
-#add_compile_definitions("UNICODE" "_UNICODE")
+add_compile_definitions("UNICODE" "_UNICODE")
 
 # true unicode utf_8
 #add_compile_definitions("UTF8_UNICODE")
