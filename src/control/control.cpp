@@ -22,7 +22,7 @@ void sendMessage(const AviaoSharedObjects_control &coms, Mensagem_Aviao &mensage
 }
 
 void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Aviao &mensagemAviao) {
-    AviaoSharedObjects_control coms;
+    AviaoSharedObjects_control *coms;
     {
         auto guard = CriticalSectionGuard(control.critical_section_interno);
         auto aviao = control.avioes.begin();
@@ -35,8 +35,9 @@ void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Avi
             return;
         }
         aviao->update_time();
+        coms = &aviao->coms;
     }
-    sendMessage(coms, mensagemAviao);
+    sendMessage(*coms, mensagemAviao);
 }
 
 
@@ -113,6 +114,7 @@ void novoDestino(Control &control, Mensagem_Control_aviao &mensagemControl) {
 
     if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, &mensagemAviao)) {
         mensagemAviao.resposta_type = Mensagem_aviao_resposta::lol_ok;
+        control.
     } else {
         mensagemAviao.resposta_type = Mensagem_aviao_resposta::aeroporto_nao_existe;
     }

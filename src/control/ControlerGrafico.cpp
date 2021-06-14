@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "control.hpp"
+#include <strsafe.h>
 
 #define MAX_LOADSTRING 100
 
@@ -27,6 +28,14 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 INT_PTR CALLBACK    NovoAviao(HWND, UINT, WPARAM, LPARAM);
+
+INT_PTR CALLBACK    ListaAeroportos(HWND, UINT, WPARAM, LPARAM);
+
+INT_PTR CALLBACK    ListaPassageiros(HWND, UINT, WPARAM, LPARAM);
+
+INT_PTR CALLBACK    ListaAvioes(HWND, UINT, WPARAM, LPARAM);
+
+
 
 
 #ifdef _UNICODE
@@ -152,8 +161,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     PAINTSTRUCT ps;
     HDC hdc;
     const TCHAR *msg_text = TEXT("O Nuno Esteve Aqui!!!");
-
     switch (message) {
+        case WM_CREATE:
+            SetTimer(hWnd, 1, 20, NULL);
+            break;
+
+        case WM_TIMER:
+            InvalidateRect(hWnd, NULL, FALSE);
+            break;
         case WM_COMMAND: {
             LONG_PTR userdata = GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
@@ -161,11 +176,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             int wmId = LOWORD(wParam);
             // Parse the menu selections:
             switch (wmId) {
+                
                 case IDM_ABOUT:
                     DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                     break;
                 case IDM_CRIARAEROPORTO:
                     DialogBox(hInst, MAKEINTRESOURCE(IDD_NovoAviao), hWnd, NovoAviao);
+                    break;
+                case IDM_Consulta_Aeroporto:
+                    DialogBox(hInst, MAKEINTRESOURCE(IDD_LB_Aeroportos), hWnd, ListaAeroportos);
+                    break;
+                case IDM_Consulta_Aviao:
+                    DialogBox(hInst, MAKEINTRESOURCE(IDD_LB_Avioes), hWnd, ListaAvioes);
+                    break;
+                case IDM_Consulta_Passageiros:
+                    DialogBox(hInst, MAKEINTRESOURCE(IDD_LB_Passageiros), hWnd, ListaAvioes);
                     break;
                 case IDM_NO_PLANES:
                     menu->desativa_novos_avioes();
@@ -185,7 +210,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            TextOut(hdc, 500, 500, msg_text, sizeof(msg_text));
+            TextOut(hdc, 500, 500, msg_text, _tcslen(msg_text));
+            auto guard = CriticalSectionGuard(menu->control.critical_section_interno);
+            for (int i = 0; i < menu->control.aeroportos.size(); i++) {
+                TextOut(hdc, menu->control.aeroportos[i].pos.x, menu->control.aeroportos[i].pos.y, menu->control.aeroportos[i].nome, 1);
+            }
+           // int i = 0;
+
+            for (auto& aviao : menu->control.avioes)
+            {
+                TextOut(hdc, aviao.PosA.x, aviao.PosA.y, t("A"), 1);
+            }
+
             // TODO: Add any drawing code that uses hdc here...
             EndPaint(hWnd, &ps);
         }
@@ -230,6 +266,224 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
     return (INT_PTR) FALSE;
 }
 
+INT_PTR CALLBACK ListaAeroportos(HWND hDlg, UINT message,
+    WPARAM wParam, LPARAM lParam)
+{
+
+    switch (message)
+    {
+    case WM_INITDIALOG:
+    {
+        // Add items to list. 
+        HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
+        for (int i = 0; i < menu->control.aeroportos.size(); i++)
+        {
+            int pos = (int)SendMessage(hwndList, LB_ADDSTRING, 0,
+                (LPARAM)menu->control.aeroportos[i].nome);
+            // Set the array index of the player as item data.
+            // This enables us to retrieve the item from the array
+            // even after the items are sorted by the list box.
+            SendMessage(hwndList, LB_SETITEMDATA, pos, (LPARAM)i);
+        }
+        // Set input focus to the list box.
+        SetFocus(hwndList);
+        return TRUE;
+    }
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hDlg, LOWORD(wParam));
+            return TRUE;
+
+        case IDC_ListAeroportos:
+        {
+            switch (HIWORD(wParam))
+            {
+            case LBN_SELCHANGE:
+            {
+                HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
+
+                // Get selected index.
+                int lbItem = (int)SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+
+                // Get item data.
+                int i = (int)SendMessage(hwndList, LB_GETITEMDATA, lbItem, 0);
+              
+                // Do something with the data from Roster[i]
+                TCHAR buff[MAX_PATH];
+                StringCbPrintf(buff, ARRAYSIZE(buff),
+                    TEXT("Nome: %s\nLocal: X-> %d\tY-> %d"),
+                    menu->control.aeroportos[i].nome, menu->control.aeroportos[i].pos.x,
+                    menu->control.aeroportos[i].pos.y);
+
+                SetDlgItemText(hDlg, IDC_STATIC, buff);
+                return TRUE;
+            }
+            }
+        }
+        return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+INT_PTR CALLBACK ListaPassageiros(HWND hDlg, UINT message,
+    WPARAM wParam, LPARAM lParam)
+{
+
+    switch (message)
+    {
+    case WM_INITDIALOG:
+    {
+        // Add items to list. 
+        HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
+        int i = 0;
+        auto guard = CriticalSectionGuard(menu->control.critical_section_interno);
+        for (auto& pass : menu->control.passageiros)
+        {
+            tstringstream stream;
+            stream << t("pass") << i + 1;
+            tstring s = stream.str();
+            int pos = (int)SendMessage(hwndList, LB_ADDSTRING, 0,
+                (LPARAM)s.c_str());
+            // Set the array index of the player as item data.
+            // This enables us to retrieve the item from the array
+            // even after the items are sorted by the list box.
+            SendMessage(hwndList, LB_SETITEMDATA, pos, (LPARAM)i);
+            i++;
+        }
+        // Set input focus to the list box.
+        SetFocus(hwndList);
+        return TRUE;
+    }
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hDlg, LOWORD(wParam));
+            return TRUE;
+
+        case IDC_ListAeroportos:
+        {
+            switch (HIWORD(wParam))
+            {
+            case LBN_SELCHANGE:
+            {
+                HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
+
+                // Get selected index.
+                int lbItem = (int)SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+
+                // Get item data.
+                int i = (int)SendMessage(hwndList, LB_GETITEMDATA, lbItem, 0);
+                int j = 0;
+                auto guard = CriticalSectionGuard(menu->control.critical_section_interno);
+                for (auto& pass : menu->control.passageiros) {
+                    if (i == j) {
+                        //TCHAR buff[MAX_PATH];
+                        tstringstream stream;
+                        stream << t("Tempo para Embarcar-> ") << pass.info.tempo_para_embarcar << t("\nAeroporto Atual->") << 
+                            pass.info.id_aeroporto_origem << t("\nAeroporto Destino->") << pass.info.id_aeroporto_destino;
+                        tstring buff = stream.str();
+
+                        SetDlgItemText(hDlg, IDC_STATIC, buff.c_str());
+                        return TRUE;
+                    }
+                    j++;
+                }
+                // Do something with the data from Roster[i]
+
+            }
+            }
+        }
+        return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+INT_PTR CALLBACK ListaAvioes(HWND hDlg, UINT message,
+    WPARAM wParam, LPARAM lParam)
+{
+
+    switch (message)
+    {
+    case WM_INITDIALOG:
+    {
+        // Add items to list. 
+        HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
+        int i=0;
+        auto guard = CriticalSectionGuard(menu->control.critical_section_interno);
+        for (auto& aviao : menu->control.avioes)
+        {
+            tstringstream stream;
+            stream << aviao.IDAv;
+            tstring s = stream.str();
+            int pos = (int)SendMessage(hwndList, LB_ADDSTRING, 0,
+                (LPARAM)s.c_str());
+            // Set the array index of the player as item data.
+            // This enables us to retrieve the item from the array
+            // even after the items are sorted by the list box.
+            SendMessage(hwndList, LB_SETITEMDATA, pos, (LPARAM)i);
+            i++;
+        }
+        // Set input focus to the list box.
+        SetFocus(hwndList);
+        return TRUE;
+    }
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hDlg, LOWORD(wParam));
+            return TRUE;
+
+        case IDC_ListAeroportos:
+        {
+            switch (HIWORD(wParam))
+            {
+            case LBN_SELCHANGE:
+            {
+                HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
+
+                // Get selected index.
+                int lbItem = (int)SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+
+                // Get item data.
+                int i = (int)SendMessage(hwndList, LB_GETITEMDATA, lbItem, 0);
+                int j = 0;
+                auto guard = CriticalSectionGuard(menu->control.critical_section_interno);
+                for (auto& aviao : menu->control.avioes) {
+                    if (i == j) {
+                        //TCHAR buff[MAX_PATH];
+                        tstringstream stream;
+                        stream << t("ID: ") << aviao.IDAv << t("\nVelocidade->") << aviao.velocidade <<
+                            t("\tCapaxidadeMax->") << aviao.CapMax << t("\nPosição Atual: X-> ") << aviao.PosA.x << t("\tY-> ")
+                                << aviao.PosA.y << "\nPosição Destino: X-> "<< aviao.PosDest.x<<"\tY-> " << aviao.PosDest.y;
+                        tstring buff = stream.str();
+
+                        SetDlgItemText(hDlg, IDC_STATIC, buff.c_str());
+                        return TRUE;
+                    }
+                    j++;
+                }
+                // Do something with the data from Roster[i]
+                
+            }
+            }
+        }
+        return TRUE;
+        }
+    }
+    return FALSE;
+}
 
 INT_PTR CALLBACK NovoAviao(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
     UNREFERENCED_PARAMETER(lParam);
@@ -247,21 +501,27 @@ INT_PTR CALLBACK NovoAviao(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
                     break;
               */
                 case IDOK:
-                    GetDlgItemText(hDlg, IDC_NomeAero, a.nome, 50);
-                    a.pos.x = GetDlgItemInt(hDlg, IDC_XCords, FALSE, FALSE);
-                    a.pos.y = GetDlgItemInt(hDlg, IDC_YCords, FALSE, FALSE);
-                    menu->cria_aeroporto();
-                    if (a.nome == NULL) {
-                        MessageBox(hDlg, TEXT("NULL"), TEXT("..."), 0);
-                    }
-                    if (_tcscpy_s(a.nome, 50, TEXT(" "))) {
-                        MessageBox(hDlg, TEXT("NULL"), TEXT("..."), 0);
-                    } else {
-                        MessageBox(hDlg, a.nome, t("edita texto"), 0);
+                    GetDlgItemText(hDlg, IDC_NomeAero, menu->componentes_graphicos.aeroporto.nome, 50);
+                    menu->componentes_graphicos.aeroporto.pos.x = GetDlgItemInt(hDlg, IDC_XCords, FALSE, FALSE);
+                    menu->componentes_graphicos.aeroporto.pos.y = GetDlgItemInt(hDlg, IDC_YCords, FALSE, FALSE);
+                    if (!menu->cria_aeroporto()) {
+                        MessageBoxEx(NULL, TEXT("Já existe um aeroporto nas redondezas, não me parece boa ideia construir um aqui"),
+                            TEXT("ERRO!"), MB_OK | MB_ICONINFORMATION | MB_TASKMODAL, 0);
+                        
                         EndDialog(hDlg, LOWORD(wParam));
-                        return (INT_PTR) TRUE;
-                        break;
+                        return (INT_PTR)TRUE;
                     }
+                    
+                    MessageBox(hDlg, menu->componentes_graphicos.aeroporto.nome, t("Dados Inseridos"), 0);
+                    EndDialog(hDlg, LOWORD(wParam));
+                    menu->componentes_graphicos.aeroporto.IDAero = ++menu->counter_aeroporto;
+                    {
+                        auto guard = CriticalSectionGuard(menu->control.critical_section_interno);
+                        menu->control.aeroportos.insert(menu->control.aeroportos.end(), menu->componentes_graphicos.aeroporto);
+                    }
+                    return (INT_PTR) TRUE;
+                    break;
+   
 
                 case IDCANCEL:
                     MessageBoxEx(NULL, TEXT("Miau"), TEXT("O Nuno Esteve Aqui!!!"),
@@ -284,33 +544,30 @@ INT_PTR CALLBACK NovoAviao(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 }
 
 
-void Menu::cria_aeroporto() {
+bool Menu::cria_aeroporto() {
 
     if (!verificaMaxAeroportos(this)) {
         MessageBoxEx(NULL, TEXT("Maximo de Aeroportos exedidos..."), TEXT("ERRO!"),
                      MB_OK | MB_ICONINFORMATION | MB_TASKMODAL, 0);
-        return;
+        return false;
     }
 
 
-    bool aeroporto_near;
+    bool aeroporto_near = true;
     auto guard = CriticalSectionGuard(control.critical_section_interno);
     for (auto &elem : this->control.aeroportos) {
-        int tmpX = abs(long(elem.pos.x - a.pos.x));
-        int tmpY = abs(long(elem.pos.y - a.pos.y));
+        int tmpX = abs(long(elem.pos.x - menu->componentes_graphicos.aeroporto.pos.x));
+        int tmpY = abs(long(elem.pos.y - menu->componentes_graphicos.aeroporto.pos.y));
         if (tmpX < 10 && tmpY < 10) {
-            MessageBoxEx(NULL, TEXT("Já existe um aeroporto nas redondezas, não me parece boa ideia construir um aqui"),
-                         TEXT("ERRO!"), MB_OK | MB_ICONINFORMATION | MB_TASKMODAL, 0);
-            aeroporto_near = true;
+            aeroporto_near = false;
         }
     }
-
-    a.IDAero = ++this->counter_aeroporto;
-    {
-        auto guard = CriticalSectionGuard(control.critical_section_interno);
-        this->control.aeroportos.insert(this->control.aeroportos.end(), a);
+    return aeroporto_near;
+        
     }
-}
+
+    
+
 
 void Menu::desativa_novos_avioes() {
     auto guard = CriticalSectionGuard(control.critical_section_interno);
