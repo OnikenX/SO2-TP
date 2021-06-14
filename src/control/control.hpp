@@ -86,7 +86,7 @@ struct Menu
     bool cria_aeroporto();
     void consulta_aeroporto();
     void consultar_aviao();
-    void desativa_novos_avioes();
+    bool desativa_novos_avioes();
 
     Argumentos_deinit componentes_graphicos{};
 };

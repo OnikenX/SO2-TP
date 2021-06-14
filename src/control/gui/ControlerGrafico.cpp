@@ -135,7 +135,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
     hInst = hInstance; // Store instance handle in our global variable
 
     HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-                             CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
     if (!hWnd) {
         return FALSE;
@@ -193,9 +193,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                     DialogBox(hInst, MAKEINTRESOURCE(IDD_LB_Passageiros), hWnd, ListaAvioes);
                     break;
                 case IDM_NO_PLANES:
-                    menu->desativa_novos_avioes();
-                    MessageBoxEx(nullptr, TEXT("DOORS CLOSED"), TEXT("O Nuno Esteve Aqui!!!"),
-                                 MB_OK | MB_ICONINFORMATION | MB_TASKMODAL, 0);
+                    if (!menu->desativa_novos_avioes()) {
+                        MessageBoxEx(nullptr, TEXT("DOORS CLOSED"), TEXT("O Nuno Esteve Aqui!!!"),
+                            MB_OK | MB_ICONINFORMATION | MB_TASKMODAL, 0);
+                    }
+                    else {
+                        MessageBoxEx(nullptr, TEXT("DOORS OPEN"), TEXT("O Nuno Esteve Aqui!!!"),
+                            MB_OK | MB_ICONINFORMATION | MB_TASKMODAL, 0);
+                    }
+                     
                     break;
                 case IDM_EXIT:
                     DestroyWindow(hWnd);
@@ -466,7 +472,7 @@ INT_PTR CALLBACK ListaAvioes(HWND hDlg, UINT message,
                         tstringstream stream;
                         stream << t("ID: ") << aviao.IDAv << t("\nVelocidade->") << aviao.velocidade <<
                             t("\tCapaxidadeMax->") << aviao.CapMax << t("\nPosição Atual:\n X-> ") << aviao.PosA.x << t("\tY-> ")
-                                << aviao.PosA.y << "\nPosição Destino: X-> "<< aviao.PosDest.x<<"\tY-> " << aviao.PosDest.y;
+                                << aviao.PosA.y << t("\nPosição Destino: X-> ")<< aviao.PosDest.x<<t("\tY-> ") << aviao.PosDest.y;
                         tstring buff = stream.str();
 
                         SetDlgItemText(hDlg, IDC_STATICav, buff.c_str());
@@ -524,8 +530,6 @@ INT_PTR CALLBACK NovoAviao(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 
 
                 case IDCANCEL:
-                    MessageBoxEx(NULL, TEXT("Miau"), TEXT("O Nuno Esteve Aqui!!!"),
-                                 MB_OK | MB_ICONINFORMATION | MB_TASKMODAL, 0);
                     EndDialog(hDlg, LOWORD(wParam));
                     return (INT_PTR) TRUE;
                     break;
@@ -566,9 +570,9 @@ bool Menu::cria_aeroporto() {
 
 }
 
-void Menu::desativa_novos_avioes() {
+bool Menu::desativa_novos_avioes() {
     auto guard = CriticalSectionGuard(control.critical_section_interno);
-    this->control.aceita_avioes = !this->control.aceita_avioes;
+    return this->control.aceita_avioes = !this->control.aceita_avioes;
 }
 
 
