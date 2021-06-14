@@ -133,6 +133,7 @@ DWORD WINAPI ThreadVoa(LPVOID param) {
                 break;
             }
         }
+
         Sleep(1000);
     } while (cond != 0);
     WaitForSingleObject(aviao.sharedComs->mutex_em_andamento, INFINITE);

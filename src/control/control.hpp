@@ -83,7 +83,7 @@ struct Menu
     Menu &operator=(const Menu &) = delete; // non copyable
     Control& control;
     int counter_aeroporto;
-    void cria_aeroporto();
+    bool cria_aeroporto();
     void consulta_aeroporto();
     void consultar_aviao();
     void desativa_novos_avioes();

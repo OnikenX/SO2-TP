@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by ControlerGrafico.rc
+// Used by control.rc
 //
 #define IDC_MYICON                      2
 #define IDD_CONTROLERGRAFICO_DIALOG     102
@@ -14,6 +14,10 @@
 #define IDC_CONTROLERGRAFICO            109
 #define IDR_MAINFRAME                   128
 #define IDD_NovoAviao                   129
+#define IDD_LB_Aeroportos               130
+#define IDD_LB_Avioes                   131
+#define IDD_LB_Avioes1                  132
+#define IDD_LB_Passageiros              132
 #define IDC_EDIT1                       1003
 #define IDC_NomeAero                    1003
 #define IDC_XCords                      1005
@@ -21,6 +25,9 @@
 #define IDC_TXCords                     1007
 #define IDC_TYcords                     1008
 #define IDC_TNomeAero                   1009
+#define IDC_ListAeroportos              1010
+#define IDC_ListAvioes                  1012
+#define IDC_STATICav                    1013
 #define ID_FILE_CIARAEROPORTO           32771
 #define ID_FILE_CONSULTAR               32772
 #define ID_CONSULTAR_AEROPORTO          32773
@@ -40,9 +47,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        130
+#define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1010
+#define _APS_NEXT_CONTROL_VALUE         1014
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

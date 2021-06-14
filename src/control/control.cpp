@@ -21,7 +21,7 @@ void sendMessage(const AviaoSharedObjects_control &coms, Mensagem_Aviao_response
 #endif
 }
 
-void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Aviao_response &mensagemAviao) {
+void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Aviao &mensagemAviao) {
     AviaoSharedObjects_control *coms;
     {
         auto guard = CriticalSectionGuard(control.critical_section_interno);
@@ -34,8 +34,8 @@ void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Avi
             tcerr << "[ERROR]: O aviaoInfo " << id_aviao << " ainda não esta registado." << std::endl;
             return;
         }
-        coms = &aviao->coms;
         aviao->update_time();
+        coms = &aviao->coms;
     }
     sendMessage(*coms, mensagemAviao);
 }
@@ -103,7 +103,7 @@ void confirmarNovoAviao(Control &control, Mensagem_Aviao_request &mensagemContro
 #ifdef _DEBUG
             tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" receitado.") << std::endl;
 #endif
-            mensagemAviao.resposta_type = Mensagem_Aviao_response_type::aeroporto_nao_existe;
+            mensagemAviao.resposta_type = Mensagem_aviao_resposta::aeroporto_nao_existe;
         }
     }
     sendMessage(coms.value(), mensagemAviao);
