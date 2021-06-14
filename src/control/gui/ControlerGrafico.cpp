@@ -472,7 +472,7 @@ INT_PTR CALLBACK ListaAvioes(HWND hDlg, UINT message,
                         tstringstream stream;
                         stream << t("ID: ") << aviao.IDAv << t("\nVelocidade->") << aviao.velocidade <<
                             t("\tCapaxidadeMax->") << aviao.CapMax << t("\nPosição Atual:\n X-> ") << aviao.PosA.x << t("\tY-> ")
-                                << aviao.PosA.y << t("\nPosição Destino: X-> ")<< aviao.PosDest.x<<t("\tY-> ") << aviao.PosDest.y;
+                                << aviao.PosA.y << t("\nPosição Destino:\n X-> ")<< aviao.PosDest.x<<t("\tY-> ") << aviao.PosDest.y;
                         tstring buff = stream.str();
 
                         SetDlgItemText(hDlg, IDC_STATICav, buff.c_str());
