@@ -62,7 +62,7 @@ struct Aeroporto {
     unsigned long IDAero;
 };
 
-enum class Mensagem_aviao_types {
+enum class Mensagem_aviao_request_types {
     confirmar_novo_aviao,
     alterar_coords,
     novo_destino,
@@ -89,9 +89,9 @@ union Mensagem_Control_aviao_union {
 
 
 //as mensagens que sao enviadas para o control pelo aviaoInstance
-struct Mensagem_Control_aviao {//o aviaoInfo envia isto
-    Mensagem_Control_aviao() = default;
-    Mensagem_aviao_types type;
+struct Mensagem_Aviao_request {//o aviaoInfo envia isto
+    Mensagem_Aviao_request() = default;
+    Mensagem_aviao_request_types type;
     unsigned long id_aviao;
     Mensagem_Control_aviao_union mensagem;
 };
@@ -102,13 +102,12 @@ struct Resposta_Novas_Coordenadas {
     unsigned int y;
 };
 
-
 union Mensagem_Aviao_union {
     Resposta_Novas_Coordenadas respostaNovasCoordenadas;
 };
 
 //respostas que o control envia
-enum class Mensagem_aviao_resposta {
+enum class Mensagem_Aviao_response_type {
     lol_ok,//mensagem de confirmação/OK
     movimento_fail,// nao pode fazer movimento x
     kill_me,//suicinho quentinho
@@ -118,9 +117,8 @@ enum class Mensagem_aviao_resposta {
 };
 
 
-struct Mensagem_Aviao { //aviaoInfo recebe
-//    Mensagem_aviao_types request_type;
-    Mensagem_aviao_resposta resposta_type;
+struct Mensagem_Aviao_response { //aviaoInfo recebe
+    Mensagem_Aviao_response_type resposta_type;
     Mensagem_Aviao_union msg_content;
 };
 
@@ -132,7 +130,7 @@ struct SharedMemoryMap_control {
 //    int nAvioes;
 //    bool terminar;
     //buffer circular das mensagens que vao do aviaoInstance para o control
-    Mensagem_Control_aviao buffer_mensagens_control[CIRCULAR_BUFFERS_SIZE];
+    Mensagem_Aviao_request buffer_mensagens_control[CIRCULAR_BUFFERS_SIZE];
     int posReader, posWriter;
 
     SharedMemoryMap_control();

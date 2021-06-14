@@ -59,7 +59,7 @@ shared_control_aviao::~shared_control_aviao() {
 
 
 SharedMemoryMap_control::SharedMemoryMap_control() : posReader(0), posWriter(0) {
-    memset(buffer_mensagens_control, 0, sizeof(Mensagem_Control_aviao) * CIRCULAR_BUFFERS_SIZE);
+    memset(buffer_mensagens_control, 0, sizeof(Mensagem_Aviao_request) * CIRCULAR_BUFFERS_SIZE);
 }
 
 bool Cords::isEqual(Cords &outro) const {

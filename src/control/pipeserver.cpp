@@ -13,10 +13,10 @@ bool verifica_avioes(Mensagem_Passageiro_request &passageiroRequest,
     bool encontrou_destino = false, encontrou_origem = false;
     passageiroResponse.resposta_type = Mensagem_passageiro_response_type::aeroporto_nao_existe;
     auto guard = CriticalSectionGuard(control.critical_section_interno);
-    for (const auto &aviao : control.avioes) {
-        if (aviao.IDAv == passageiroRequest.msg_content.passageiroInfo.id_aeroporto_destino)
+    for (const auto &aeroportos : control.aeroportos) {
+        if (aeroportos.IDAero == passageiroRequest.msg_content.passageiroInfo.id_aeroporto_destino)
             encontrou_destino = true;
-        if (aviao.IDAv == passageiroRequest.msg_content.passageiroInfo.id_aeroporto_origem)
+        if (aeroportos.IDAero == passageiroRequest.msg_content.passageiroInfo.id_aeroporto_origem)
             encontrou_origem = true;
         if (encontrou_destino && encontrou_origem) {
             passageiroResponse.resposta_type = Mensagem_passageiro_response_type::lol_ok;
@@ -93,14 +93,6 @@ DWORD WINAPI PipeServer(LPVOID param) {
 }
 
 
-void terminate_pipe_handles(HANDLE hPipe) {
-    // Flush the pipe to allow the client to read the pipe's contents
-    // before disconnecting. Then disconnect the pipe, and close the
-    // handle to this pipe instance.
-    FlushFileBuffers(hPipe);
-    DisconnectNamedPipe(hPipe);
-    CloseHandle(hPipe);
-}
 
 DWORD WINAPI InstanceThread(LPVOID lpvParam)
 // This routine is a thread processing function to read from and reply to a client

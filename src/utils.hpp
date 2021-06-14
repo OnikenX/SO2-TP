@@ -67,3 +67,5 @@ bool ler_numero(const TCHAR *string_numero, long& resulting_value);
 
 //uma thread que espera pelo sinal de morrer
 DWORD WINAPI Limbo(LPVOID param);
+
+void terminate_pipe_handles(HANDLE hPipe);

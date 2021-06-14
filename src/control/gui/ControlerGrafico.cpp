@@ -161,6 +161,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     PAINTSTRUCT ps;
     HDC hdc;
     const TCHAR *msg_text = TEXT("O Nuno Esteve Aqui!!!");
+
     switch (message) {
         case WM_CREATE:
             SetTimer(hWnd, 1, 20, NULL);
@@ -176,7 +177,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             int wmId = LOWORD(wParam);
             // Parse the menu selections:
             switch (wmId) {
-                
                 case IDM_ABOUT:
                     DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                     break;
@@ -274,7 +274,7 @@ INT_PTR CALLBACK ListaAeroportos(HWND hDlg, UINT message,
     {
     case WM_INITDIALOG:
     {
-        // Add items to list. 
+        // Add items to list.
         HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
         for (int i = 0; i < menu->control.aeroportos.size(); i++)
         {
@@ -311,7 +311,7 @@ INT_PTR CALLBACK ListaAeroportos(HWND hDlg, UINT message,
 
                 // Get item data.
                 int i = (int)SendMessage(hwndList, LB_GETITEMDATA, lbItem, 0);
-              
+
                 // Do something with the data from Roster[i]
                 TCHAR buff[MAX_PATH];
                 StringCbPrintf(buff, ARRAYSIZE(buff),
@@ -338,7 +338,7 @@ INT_PTR CALLBACK ListaPassageiros(HWND hDlg, UINT message,
     {
     case WM_INITDIALOG:
     {
-        // Add items to list. 
+        // Add items to list.
         HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
         int i = 0;
         auto guard = CriticalSectionGuard(menu->control.critical_section_interno);
@@ -387,7 +387,7 @@ INT_PTR CALLBACK ListaPassageiros(HWND hDlg, UINT message,
                     if (i == j) {
                         //TCHAR buff[MAX_PATH];
                         tstringstream stream;
-                        stream << t("Tempo para Embarcar-> ") << pass.info.tempo_para_embarcar << t("\nAeroporto Atual->") << 
+                        stream << t("Tempo para Embarcar-> ") << pass.info.tempo_para_embarcar << t("\nAeroporto Atual->") <<
                             pass.info.id_aeroporto_origem << t("\nAeroporto Destino->") << pass.info.id_aeroporto_destino;
                         tstring buff = stream.str();
 
@@ -415,7 +415,7 @@ INT_PTR CALLBACK ListaAvioes(HWND hDlg, UINT message,
     {
     case WM_INITDIALOG:
     {
-        // Add items to list. 
+        // Add items to list.
         HWND hwndList = GetDlgItem(hDlg, IDC_ListAeroportos);
         int i=0;
         auto guard = CriticalSectionGuard(menu->control.critical_section_interno);
@@ -475,7 +475,7 @@ INT_PTR CALLBACK ListaAvioes(HWND hDlg, UINT message,
                     j++;
                 }
                 // Do something with the data from Roster[i]
-                
+
             }
             }
         }
@@ -507,11 +507,11 @@ INT_PTR CALLBACK NovoAviao(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
                     if (!menu->cria_aeroporto()) {
                         MessageBoxEx(NULL, TEXT("Já existe um aeroporto nas redondezas, não me parece boa ideia construir um aqui"),
                             TEXT("ERRO!"), MB_OK | MB_ICONINFORMATION | MB_TASKMODAL, 0);
-                        
+
                         EndDialog(hDlg, LOWORD(wParam));
                         return (INT_PTR)TRUE;
                     }
-                    
+
                     MessageBox(hDlg, menu->componentes_graphicos.aeroporto.nome, t("Dados Inseridos"), 0);
                     EndDialog(hDlg, LOWORD(wParam));
                     menu->componentes_graphicos.aeroporto.IDAero = ++menu->counter_aeroporto;
@@ -521,7 +521,7 @@ INT_PTR CALLBACK NovoAviao(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
                     }
                     return (INT_PTR) TRUE;
                     break;
-   
+
 
                 case IDCANCEL:
                     MessageBoxEx(NULL, TEXT("Miau"), TEXT("O Nuno Esteve Aqui!!!"),
@@ -563,11 +563,9 @@ bool Menu::cria_aeroporto() {
         }
     }
     return aeroporto_near;
-        
+
     }
-
-    
-
+}
 
 void Menu::desativa_novos_avioes() {
     auto guard = CriticalSectionGuard(control.critical_section_interno);

@@ -74,13 +74,12 @@ DWORD WINAPI PipeClient(LPVOID param) {
     HANDLE threads[] = {
             CreateThread(nullptr, 0, InputWaiter, nullptr, 0, nullptr),
             CreateThread(nullptr, 0, Limbo, nullptr, 0, nullptr),
-            CreateThread(nullptr, 0, GetMessages, nullptr, 0, nullptr)
+            CreateThread(nullptr, 0, GetMessages, hPipe, 0, nullptr)
     };
     //if any of the threads fails, they are terminated
     WaitForMultipleObjects(sizeof(threads) / sizeof(HANDLE), threads, false, INFINITE);
 
-    CloseHandle(hPipe);
-
+    //nao feicho os handles porque a terminação do pipe iria bolquiar a saida
     return 0;
 }
 
@@ -149,7 +148,7 @@ DWORD WINAPI InputWaiter(LPVOID param) {
         stream >> command;
         if (command == t("killme")) {
             tcout << t("Bye bye cruel world.\n");
-            exit = true;
+            break;
         } else if (command == t("help")) {
             tcout << t("Commands:")
                   << t("\n\thelp - printa isto.")
@@ -176,12 +175,12 @@ DWORD WINAPI GetMessages(LPVOID lpparam) {
                 sizeof(Mensagem_Passageiro_response), // size of buffer
                 &cbRead, // number of bytes read
                 nullptr);        // not overlapped I/O
-
+        auto lastError = GetLastError();
         if (!fSuccess || cbRead == 0) {
-            if (GetLastError() == ERROR_BROKEN_PIPE) {
+            if (lastError == ERROR_BROKEN_PIPE) {
                 _tprintf(TEXT("InstanceThread: client disconnected.\n"));
             } else {
-                _tprintf(TEXT("InstanceThread ReadFile failed, GLE=%d.\n"), GetLastError());
+                _tprintf(TEXT("InstanceThread ReadFile failed, GLE=%lu.\n"), lastError);
             }
             break;
         }

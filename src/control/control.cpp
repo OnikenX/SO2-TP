@@ -8,11 +8,11 @@ DWORD WINAPI ThreadMenu(LPVOID param) {
 }
 
 
-void sendMessage(const AviaoSharedObjects_control &coms, Mensagem_Aviao &mensagemAviao) {
+void sendMessage(const AviaoSharedObjects_control &coms, Mensagem_Aviao_response &mensagemAviao) {
     WaitForSingleObject(coms.semaforo_write, INFINITE);
     WaitForSingleObject(coms.mutex, INFINITE);
 
-    CopyMemory(coms.sharedMensagemAviao, &mensagemAviao, sizeof(Mensagem_Aviao));
+    CopyMemory(coms.sharedMensagemAviao, &mensagemAviao, sizeof(Mensagem_Aviao_response));
 
     ReleaseMutex(coms.mutex);
     ReleaseSemaphore(coms.semaforo_read, 1, nullptr);
@@ -27,7 +27,7 @@ void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Avi
         auto guard = CriticalSectionGuard(control.critical_section_interno);
         auto aviao = control.avioes.begin();
         aviao = std::find_if(control.avioes.begin(), control.avioes.end(),
-                             [&](aviao_in_controlstorage &aviaoShareWithComs) {
+                             [&](const aviao_in_controlstorage &aviaoShareWithComs) {
                                  return aviaoShareWithComs.IDAv == id_aviao;
                              });
         if (aviao == control.avioes.end()) {
@@ -42,7 +42,7 @@ void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Avi
 
 
 bool
-Control::verificaAeroporto_e_atualizaSeAviao(Mensagem_Control_aviao &mensagemControl, Mensagem_Aviao *mensagemAviao) {
+Control::verificaAeroporto_e_atualizaSeAviao(Mensagem_Aviao_request &mensagemControl, Mensagem_Aviao_response *mensagemAviao) {
     auto guard = CriticalSectionGuard(critical_section_interno);
 
     auto result = std::find_if(std::begin(aeroportos), std::end(aeroportos), [&](Aeroporto &a) {
@@ -59,8 +59,8 @@ Control::verificaAeroporto_e_atualizaSeAviao(Mensagem_Control_aviao &mensagemCon
 
 }
 
-void confirmarNovoAviao(Control &control, Mensagem_Control_aviao &mensagemControl) {
-    Mensagem_Aviao mensagemAviao{};
+void confirmarNovoAviao(Control &control, Mensagem_Aviao_request &mensagemControl) {
+    Mensagem_Aviao_response mensagemAviao{};
 #ifdef _DEBUG
     tcout << t("[DEBUG]: Recebido pedido de novo aviaoInfo para o aeroporto ")
           << mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto << std::endl;
@@ -90,12 +90,12 @@ void confirmarNovoAviao(Control &control, Mensagem_Control_aviao &mensagemContro
         auto guard = CriticalSectionGuard(control.critical_section_interno);
 
         if (!control.aceita_avioes) {
-            mensagemAviao.resposta_type = Mensagem_aviao_resposta::Porta_Fechada;
+            mensagemAviao.resposta_type = Mensagem_Aviao_response_type::Porta_Fechada;
         } else if (control.avioes.size() >= control.MAX_AVIOES) {
-            mensagemAviao.resposta_type = Mensagem_aviao_resposta::MAX_Atingido;
+            mensagemAviao.resposta_type = Mensagem_Aviao_response_type::MAX_Atingido;
         } else if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, &mensagemAviao)) {
             control.avioes.emplace_back(mensagemControl.mensagem.pedidoConfirmarNovoAviao.av, std::move(coms.value()));
-            mensagemAviao.resposta_type = Mensagem_aviao_resposta::lol_ok;
+            mensagemAviao.resposta_type = Mensagem_Aviao_response_type::lol_ok;
 #ifdef _DEBUG
             tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" aceite.") << std::endl;
 #endif
@@ -109,21 +109,20 @@ void confirmarNovoAviao(Control &control, Mensagem_Control_aviao &mensagemContro
     sendMessage(coms.value(), mensagemAviao);
 }
 
-void novoDestino(Control &control, Mensagem_Control_aviao &mensagemControl) {
-    Mensagem_Aviao mensagemAviao{};
+void novoDestino(Control &control, Mensagem_Aviao_request &mensagemControl) {
+    Mensagem_Aviao_response mensagemAviao{};
 
     if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, &mensagemAviao)) {
-        mensagemAviao.resposta_type = Mensagem_aviao_resposta::lol_ok;
-        control.
+        mensagemAviao.resposta_type = Mensagem_Aviao_response_type::lol_ok;
     } else {
-        mensagemAviao.resposta_type = Mensagem_aviao_resposta::aeroporto_nao_existe;
+        mensagemAviao.resposta_type = Mensagem_Aviao_response_type::aeroporto_nao_existe;
     }
 
     find_and_sendMessage(control, mensagemControl.id_aviao, mensagemAviao);
 }
 
 
-bool Control::existeAlguem(Mensagem_Control_aviao &mensagemControl) {
+bool Control::existeAlguem(Mensagem_Aviao_request &mensagemControl) {
     auto guard = CriticalSectionGuard(critical_section_interno);
     for (auto &a: avioes) {
         if (a.PosA.y == mensagemControl.mensagem.pedidoConfirmarMovimento.y &&
@@ -134,31 +133,31 @@ bool Control::existeAlguem(Mensagem_Control_aviao &mensagemControl) {
     return false;
 }
 
-void alterarCoords(Control &control, Mensagem_Control_aviao &mensagemControl) {
-    Mensagem_Aviao mensagemAviao{};
+void alterarCoords(Control &control, Mensagem_Aviao_request &mensagemControl) {
+    Mensagem_Aviao_response mensagemAviao{};
     if (control.existeAlguem(mensagemControl)) {
-        mensagemAviao.resposta_type = Mensagem_aviao_resposta::movimento_fail;
+        mensagemAviao.resposta_type = Mensagem_Aviao_response_type::movimento_fail;
     } else {
-        mensagemAviao.resposta_type = Mensagem_aviao_resposta::lol_ok;
+        mensagemAviao.resposta_type = Mensagem_Aviao_response_type::lol_ok;
     }
     find_and_sendMessage(control, mensagemControl.id_aviao, mensagemAviao);
 }
 
-void killMe(Control &control, Mensagem_Control_aviao &mensagemControl) {
-    Mensagem_Aviao mensagemAviao{};
-    mensagemAviao.resposta_type = Mensagem_aviao_resposta::kill_me;
+void killMe(Control &control, Mensagem_Aviao_request &mensagemControl) {
+    Mensagem_Aviao_response mensagemAviao{};
+    mensagemAviao.resposta_type = Mensagem_Aviao_response_type::kill_me;
     find_and_sendMessage(control, mensagemControl.id_aviao, mensagemAviao);
 }
 
 #define WAIT_TIMELIMIT INFINITE
 
-void mensagem_recebe(Mensagem_Control_aviao &mensagemControl,
+void mensagem_recebe(Mensagem_Aviao_request &mensagemControl,
                      SharedMemoryMap_control &sharedMem, shared_control_aviao &locks) {
     WaitForSingleObject(locks.semaforo_read_control_aviao, WAIT_TIMELIMIT);
     WaitForSingleObject(locks.mutex_partilhado, WAIT_TIMELIMIT);
     {
         CopyMemory(&mensagemControl, &sharedMem.buffer_mensagens_control[sharedMem.posReader],
-                   sizeof(Mensagem_Control_aviao));
+                   sizeof(Mensagem_Aviao_request));
         sharedMem.posReader++;
         if (sharedMem.posReader == CIRCULAR_BUFFERS_SIZE)
             sharedMem.posReader = 0;
@@ -167,7 +166,7 @@ void mensagem_recebe(Mensagem_Control_aviao &mensagemControl,
     ReleaseSemaphore(locks.semaforo_write_control_aviao, 1, nullptr);
 }
 
-void pingUpdate(Control &control, Mensagem_Control_aviao &mensagemControl) {
+void pingUpdate(Control &control, Mensagem_Aviao_request &mensagemControl) {
     auto guard = CriticalSectionGuard(control.critical_section_interno);
     auto aviao = std::find_if(control.avioes.begin(), control.avioes.end(), [&](aviao_in_controlstorage &aviao) {
         return aviao.IDAv == mensagemControl.id_aviao;
@@ -178,30 +177,30 @@ void pingUpdate(Control &control, Mensagem_Control_aviao &mensagemControl) {
         tcout << t("Aviao not found for update.\n");
 }
 
-void mensagem_trata(Control &control, Mensagem_Control_aviao &mensagemControl) {
+void mensagem_trata(Control &control, Mensagem_Aviao_request &mensagemControl) {
     const TCHAR *type_string;
     switch (mensagemControl.type) {
-        case Mensagem_aviao_types::confirmar_novo_aviao: {
+        case Mensagem_aviao_request_types::confirmar_novo_aviao: {
             type_string = t("confirmar_novo_aviao");
             confirmarNovoAviao(control, mensagemControl);
             break;
         }
-        case Mensagem_aviao_types::alterar_coords: {
+        case Mensagem_aviao_request_types::alterar_coords: {
             type_string = t("alterar_coords");
             alterarCoords(control, mensagemControl);
             break;
         }
-        case Mensagem_aviao_types::ping: {
+        case Mensagem_aviao_request_types::ping: {
             type_string = t("ping");
             pingUpdate(control, mensagemControl);
             break;
         }
-        case Mensagem_aviao_types::novo_destino: {
+        case Mensagem_aviao_request_types::novo_destino: {
             type_string = t("novo_destino\"");
             novoDestino(control, mensagemControl);
             break;
         }
-        case Mensagem_aviao_types::suicidio: {
+        case Mensagem_aviao_request_types::suicidio: {
             type_string = t("suicidio");
             killMe(control, mensagemControl);
             break;
@@ -218,7 +217,7 @@ void mensagem_trata(Control &control, Mensagem_Control_aviao &mensagemControl) {
 
 DWORD WINAPI ThreadReadBuffer(LPVOID param) {
     Control &control = *(Control *) param;
-    Mensagem_Control_aviao mensagemControl;
+    Mensagem_Aviao_request mensagemControl;
     auto &sharedMem = *control.view_of_file_pointer;
     auto &locks = *shared_control_aviao::get();
     bool exit = false;
@@ -314,17 +313,16 @@ void aviao_in_controlstorage::update_time() {
     updated = std::chrono::high_resolution_clock::now();
 }
 
-void terminate_pipe_handles(HANDLE hPipe);
 
 Passageiro::~Passageiro() {
     if (!moved)
         terminate_pipe_handles(pipe);
 }
 
-Passageiro::Passageiro(Passageiro &&passageiro)noexcept
+Passageiro::Passageiro(Passageiro &&passageiro) noexcept
         : info(passageiro.info), pipe(passageiro.pipe) {
     passageiro.moved = true;
 }
 
-Passageiro::Passageiro(const PassageiroInfo & info, const HANDLE& pipe)
+Passageiro::Passageiro(const PassageiroInfo &info, const HANDLE &pipe)
         : info(info), pipe(pipe), moved(false) {}

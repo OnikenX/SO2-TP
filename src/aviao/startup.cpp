@@ -115,15 +115,15 @@ AviaoInstance::~AviaoInstance() {
 }
 
 bool AviaoInstance::verifica_criacao_com_control() {
-    Mensagem_Control_aviao mensagemControl{};
-    mensagemControl.type = Mensagem_aviao_types::confirmar_novo_aviao;
+    Mensagem_Aviao_request mensagemControl{};
+    mensagemControl.type = Mensagem_aviao_request_types::confirmar_novo_aviao;
     mensagemControl.id_aviao = aviaoInfo.IDAv;
     mensagemControl.mensagem.pedidoConfirmarNovoAviao.av = aviaoInfo;
     mensagemControl.mensagem.pedidoConfirmarNovoAviao.id_aeroporto = this->id_do_aeroporto;
     _tprintf(t("fico a espera...\n"));
     auto resposta = this->sendMessage(true, mensagemControl);
 
-    if (resposta->resposta_type == Mensagem_aviao_resposta::lol_ok) {
+    if (resposta->resposta_type == Mensagem_Aviao_response_type::lol_ok) {
 #ifdef _DEBUG
         tcout << t("[DEBUG]: Creação aceita com sucesso!") << std::endl;
 #endif
@@ -133,7 +133,7 @@ bool AviaoInstance::verifica_criacao_com_control() {
     } else {
         tstring causa{};
         switch (resposta->resposta_type) {
-            case Mensagem_aviao_resposta::aeroporto_nao_existe:
+            case Mensagem_Aviao_response_type::aeroporto_nao_existe:
                 causa = t("aeroporto_nao_existe");
                 break;
             default:
@@ -150,12 +150,12 @@ std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create(unsig
     //shared memory name
     _stprintf(nome, FM_AVIAO, id_aviao);
 //    tcout << t("Nome: ") << nome << t(" ; id_aviao : ") << id_aviao << std::endl;
-    HANDLE filemap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(Mensagem_Aviao), nome);
+    HANDLE filemap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(Mensagem_Aviao_response), nome);
     if (!filemap)
         return nullptr;
     auto sharedMensagemAviao =
-            (Mensagem_Aviao *) MapViewOfFile(filemap, FILE_MAP_ALL_ACCESS,
-                                             0, 0, sizeof(Mensagem_Aviao));
+            (Mensagem_Aviao_response *) MapViewOfFile(filemap, FILE_MAP_ALL_ACCESS,
+                                                      0, 0, sizeof(Mensagem_Aviao_response));
     if (!sharedMensagemAviao) {
         CloseHandle(filemap);
         return nullptr;
@@ -194,7 +194,7 @@ std::unique_ptr<AviaoSharedObjects_aviao> AviaoSharedObjects_aviao::create(unsig
 
 AviaoSharedObjects_aviao::AviaoSharedObjects_aviao(HANDLE mutex_mensagens, HANDLE mutex_produtor,
                                                    HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
-                                                   Mensagem_Aviao *sharedMensagemAviao, HANDLE mutex_em_andamento)
+                                                   Mensagem_Aviao_response *sharedMensagemAviao, HANDLE mutex_em_andamento)
         : mutex_produtor(mutex_produtor), semaforo_write(semaforo_write), semaforo_read(semaforo_read),
           filemap(filemap), sharedMensagemAviao(sharedMensagemAviao), mutex_mensagens(mutex_mensagens), mutex_em_andamento(mutex_em_andamento) {}
 
