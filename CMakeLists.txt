@@ -4,12 +4,12 @@ project(SO2-TP)
 set(CMAKE_CXX_STANDARD 20)
 
 # activa o unicode para o TCHAR
-add_compile_definitions("UNICODE" "_UNICODE")
+#add_compile_definitions("UNICODE" "_UNICODE")
 
 # true unicode utf_8
 #add_compile_definitions("UTF8_UNICODE")
 #deifine for esperimental pings
-#add_compile_definitions("PINGS")
+add_compile_definitions("PINGS")
 # define especial para debugging
 if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
     add_compile_definitions("_DEBUG")

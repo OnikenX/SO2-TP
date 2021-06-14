@@ -87,9 +87,9 @@ void verificaAeroporto(Aeroporto& a, Control& control, bool& exit_loop){
     }
 }
 
-void Menu::cria_aeroporto() {
+bool Menu::cria_aeroporto() {
     if (!verificaMaxAeroportos(this))
-        return;
+        return false;
     Aeroporto a;
     tcout << t("Insira as Coordenadas do novo Aeroporto:") << std::endl;
     bool aeroporto_near;
@@ -136,6 +136,7 @@ void Menu::cria_aeroporto() {
         auto guard = CriticalSectionGuard(control.critical_section_interno);
         this->control.aeroportos.insert(this->control.aeroportos.end(), a);
     }
+    return true;
 }
 
 void Menu::consulta_aeroporto() {

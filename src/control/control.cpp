@@ -21,7 +21,7 @@ void sendMessage(const AviaoSharedObjects_control &coms, Mensagem_Aviao_response
 #endif
 }
 
-void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Aviao &mensagemAviao) {
+void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Aviao_response &aviaoResponse) {
     AviaoSharedObjects_control *coms;
     {
         auto guard = CriticalSectionGuard(control.critical_section_interno);
@@ -37,17 +37,17 @@ void find_and_sendMessage(Control &control, unsigned long id_aviao, Mensagem_Avi
         aviao->update_time();
         coms = &aviao->coms;
     }
-    sendMessage(*coms, mensagemAviao);
+    sendMessage(*coms, aviaoResponse);
 }
 
 
 bool
 Control::verificaAeroporto_e_atualizaSeAviao(Mensagem_Aviao_request &mensagemControl, Mensagem_Aviao_response *mensagemAviao) {
     auto guard = CriticalSectionGuard(critical_section_interno);
-
     auto result = std::find_if(std::begin(aeroportos), std::end(aeroportos), [&](Aeroporto &a) {
         return a.IDAero == mensagemControl.mensagem.info_aeroportos.id_aeroporto;
     });
+
     if (result != std::end(aeroportos)) {
         if (mensagemAviao) {
             mensagemAviao->msg_content.respostaNovasCoordenadas.y = result->pos.y;
@@ -56,7 +56,6 @@ Control::verificaAeroporto_e_atualizaSeAviao(Mensagem_Aviao_request &mensagemCon
         return true;
     }
     return false;
-
 }
 
 void confirmarNovoAviao(Control &control, Mensagem_Aviao_request &mensagemControl) {
@@ -103,22 +102,41 @@ void confirmarNovoAviao(Control &control, Mensagem_Aviao_request &mensagemContro
 #ifdef _DEBUG
             tcout << t("[DEBUG]: Aviao com pid ") << mensagemControl.id_aviao << t(" receitado.") << std::endl;
 #endif
-            mensagemAviao.resposta_type = Mensagem_aviao_resposta::aeroporto_nao_existe;
+            mensagemAviao.resposta_type = Mensagem_Aviao_response_type::aeroporto_nao_existe;
         }
     }
     sendMessage(coms.value(), mensagemAviao);
 }
 
-void novoDestino(Control &control, Mensagem_Aviao_request &mensagemControl) {
-    Mensagem_Aviao_response mensagemAviao{};
+void novoDestino(Control &control, Mensagem_Aviao_request &aviaoRequest) {
+    Mensagem_Aviao_response aviaoResponse{};
 
-    if (control.verificaAeroporto_e_atualizaSeAviao(mensagemControl, &mensagemAviao)) {
-        mensagemAviao.resposta_type = Mensagem_Aviao_response_type::lol_ok;
+    if (control.verificaAeroporto_e_atualizaSeAviao(aviaoRequest, &aviaoResponse)) {
+        aviaoResponse.resposta_type = Mensagem_Aviao_response_type::lol_ok;
     } else {
-        mensagemAviao.resposta_type = Mensagem_Aviao_response_type::aeroporto_nao_existe;
+        aviaoResponse.resposta_type = Mensagem_Aviao_response_type::aeroporto_nao_existe;
     }
+    auto id_aviao = aviaoRequest.id_aviao;
+    AviaoSharedObjects_control *coms;
+    {
+        auto guard = CriticalSectionGuard(control.critical_section_interno);
+        auto aviao = control.avioes.begin();
+        aviao = std::find_if(control.avioes.begin(), control.avioes.end(),
+                             [&](const aviao_in_controlstorage &aviaoShareWithComs) {
+                                 return aviaoShareWithComs.IDAv == id_aviao;
+                             });
+        if (aviao == control.avioes.end()) {
+            tcerr << "[ERROR]: O aviaoInfo " << id_aviao << " ainda não esta registado." << std::endl;
+            return;
+        }
+        aviao->update_time();
+        coms = &aviao->coms;
+        if(aviaoResponse.resposta_type == Mensagem_Aviao_response_type::lol_ok){
+            aviao->PosA = aviaoRequest.mensagem.info_aeroportos
+        }
+    }
+    sendMessage(*coms, aviaoResponse);
 
-    find_and_sendMessage(control, mensagemControl.id_aviao, mensagemAviao);
 }
 
 
@@ -178,8 +196,15 @@ void pingUpdate(Control &control, Mensagem_Aviao_request &aviaoRequest) {
 }
 
 void embarcacao(Control &control, Mensagem_Aviao_request &aviaoRequest){
+    std::list<Passageiro> tmp_passg;
+    auto posA = aviaoRequest.mensagem.info_aeroportos.aviaoInfo.PosA;
+    auto posDest = aviaoRequest.mensagem.info_aeroportos.aviaoInfo.PosDest;
     auto guard = CriticalSectionGuard(control.critical_section_interno);
 
+    auto it_pass = control.passageiros.begin();
+    while(it_pass != control.passageiros.end()){
+
+    }
 }
 
 void mensagem_trata(Control &control, Mensagem_Aviao_request &aviaoRequest) {
@@ -209,7 +234,7 @@ void mensagem_trata(Control &control, Mensagem_Aviao_request &aviaoRequest) {
             type_string = t("suicidio");
             killMe(control, aviaoRequest);
             break;
-        }case Mensagem_aviao_request_types::embarcacao{
+        }case Mensagem_aviao_request_types::embarcacao:{
                     type_string = t("embarcacao");
                     embarcacao(control, aviaoRequest);
                     break;
@@ -219,7 +244,7 @@ void mensagem_trata(Control &control, Mensagem_Aviao_request &aviaoRequest) {
     }
 #ifdef _DEBUG
     tcout << t("[DEBUG]: Recebi msg_content \"") << type_string << t("\" por aviaoInfo com pid ")
-          << mensagemControl.id_aviao
+          << aviaoRequest.id_aviao
           << std::endl;
 #endif
 }
