@@ -31,8 +31,14 @@
 #include <string>
 #include <iostream>
 #include <WINDOWS.h>
+#include <utils.hpp>
 
 int main() {
+    long numero = 19;
 
+    tstringstream stream;
+    stream << 19;
+    tstring s = stream.str();
+    tcout << s << std::endl;
 
 }

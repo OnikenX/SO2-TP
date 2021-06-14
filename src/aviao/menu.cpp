@@ -17,6 +17,7 @@ void Menu::run() {
         tcout << t("*********************************") << std::endl;
         tcout << t("**   1 - Novo Destino          **") << std::endl;
         tcout << t("**   2 - Iniciar Voo           **") << std::endl;
+        tcout << t("**   3 - Embarcar Passageiros  **") << std::endl;
         tcout << t("**                             **") << std::endl;
         tcout << t("**   9 - commit Seppuku        **") << std::endl;
         tcout << t("*********************************") << std::endl;
@@ -53,14 +54,20 @@ void Menu::run() {
                 break;
 
 
-            case 2:
-
+            case 2:{
                 inicia_voo();
                 WaitForSingleObject(this->aviaoInstance.sharedComs->mutex_em_andamento, INFINITE);
                 if (aviaoInstance.em_andamento)
                     exit = true;
                 ReleaseMutex(this->aviaoInstance.sharedComs->mutex_em_andamento);
                 break;
+
+            }
+
+
+            case 3:{
+                embarcar_passageiros();
+            }
 
 
             default:
@@ -79,17 +86,17 @@ void Menu::run() {
         std::getline(tcin, line_input);
         std::basic_stringstream<TCHAR> sstream(line_input);
         sstream >> idAero;
-        Mensagem_Control_aviao mc;
-        mc.type = Mensagem_aviao_types::novo_destino;
+        Mensagem_Aviao_request mc;
+        mc.type = Mensagem_aviao_request_types::novo_destino;
         mc.id_aviao = aviaoInstance.aviaoInfo.IDAv;
     mc.mensagem.pedidoConfirmarNovoAviao.id_aeroporto = idAero;
-    std::unique_ptr<Mensagem_Aviao> resposta = aviaoInstance.sendMessage(true, mc);
-    if (resposta->resposta_type == Mensagem_aviao_resposta::lol_ok) {
+    std::unique_ptr<Mensagem_Aviao_response> resposta = aviaoInstance.sendMessage(true, mc);
+    if (resposta->resposta_type == Mensagem_Aviao_response_type::lol_ok) {
         aviaoInstance.aviaoInfo.PosDest.x = resposta->msg_content.respostaNovasCoordenadas.x;
         aviaoInstance.aviaoInfo.PosDest.y = resposta->msg_content.respostaNovasCoordenadas.y;
-    } else if (resposta->resposta_type == Mensagem_aviao_resposta::MAX_Atingido) {
+    } else if (resposta->resposta_type == Mensagem_Aviao_response_type::MAX_Atingido) {
         tcout << t("O Maximo de Aviões foi atingido, e não temos mais copões para MALLOCS, logo azar") << std::endl;
-    } else if (resposta->resposta_type ==Mensagem_aviao_resposta::Porta_Fechada) {
+    } else if (resposta->resposta_type == Mensagem_Aviao_response_type::Porta_Fechada) {
         tcout << t("Desculpe informar, mas neste Aeroporto trabalham funcionarios publicos") << std::endl;
     } else {
         tcout << t("Esse Aeroporto não existe, mas se quiseres eu posso ser o teu Aeroporto XD") << std::endl;
@@ -102,8 +109,8 @@ void Menu::run() {
 DWORD WINAPI ThreadVoa(LPVOID param) {
     AviaoInstance &aviao = *(AviaoInstance *) param;
     int cond, newX, newY;
-    Mensagem_Control_aviao mc{};
-    mc.type = Mensagem_aviao_types::alterar_coords;
+    Mensagem_Aviao_request mc{};
+    mc.type = Mensagem_aviao_request_types::alterar_coords;
     mc.id_aviao = aviao.aviaoInfo.IDAv;
     do {
         for (int i = 0; i < aviao.aviaoInfo.velocidade; i++) {
@@ -111,9 +118,9 @@ DWORD WINAPI ThreadVoa(LPVOID param) {
                               &newX, &newY);
             mc.mensagem.pedidoConfirmarMovimento.x = newX;
             mc.mensagem.pedidoConfirmarMovimento.y = newY;
-            std::unique_ptr<Mensagem_Aviao> resposta = aviao.sendMessage(true, mc);
+            std::unique_ptr<Mensagem_Aviao_response> resposta = aviao.sendMessage(true, mc);
             //recebe msg
-            if (resposta->resposta_type == Mensagem_aviao_resposta::lol_ok) {
+            if (resposta->resposta_type == Mensagem_Aviao_response_type::lol_ok) {
                 aviao.aviaoInfo.PosA.x = newX;
                 aviao.aviaoInfo.PosA.y = newY;
             } else {
@@ -130,7 +137,7 @@ DWORD WINAPI ThreadVoa(LPVOID param) {
     WaitForSingleObject(aviao.sharedComs->mutex_em_andamento, INFINITE);
     aviao.em_andamento = false;
     ReleaseMutex(aviao.sharedComs->mutex_em_andamento);
-    tcout << t("Chegou vivo ao seu destino, clique em qualquer botão para voltar ao menu inicial.") << std::endl;
+    tcout << t("Chegou vivo ao seu destino, espaço e enter para voltar.") << std::endl;
 
     return 1;
 }
@@ -144,7 +151,7 @@ void Menu::inicia_voo() {
     WaitForSingleObject(this->aviaoInstance.sharedComs->mutex_em_andamento, INFINITE);
     aviaoInstance.em_andamento = true;
     ReleaseMutex(this->aviaoInstance.sharedComs->mutex_em_andamento);
-    tcout << t("A voar, clique em qualquer tecla para !viver.");
+    tcout << t("A voar, digite espaço e enter para !viver.");
     CreateThread(nullptr, 0, ThreadVoa, &aviaoInstance, 0, nullptr);
     while (tcin.get() != t(" ")[0]);
 #ifdef _DEBUG
@@ -157,4 +164,8 @@ void Menu::inicia_voo() {
 void Menu::suicidio() {
     aviaoInstance.suicidio();
     //fechar tudo e mandar msg_content a avisar
+}
+
+void Menu::embarcar_passageiros() {
+    Mensagem_Aviao_response
 }

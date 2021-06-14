@@ -2,7 +2,7 @@
 //
 
 #include "framework.h"
-#include "control.hpp"
+#include "control/control.hpp"
 
 #define MAX_LOADSTRING 100
 

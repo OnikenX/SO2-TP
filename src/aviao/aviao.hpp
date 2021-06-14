@@ -9,11 +9,11 @@
 struct AviaoSharedObjects_aviao {
     AviaoSharedObjects_aviao(HANDLE mutex_mensagens, HANDLE mutex_produtor,
                              HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
-                             Mensagem_Aviao *sharedMensagemAviao, HANDLE mutex_em_andamento);
+                             Mensagem_Aviao_response *sharedMensagemAviao, HANDLE mutex_em_andamento);
 
     static std::unique_ptr<AviaoSharedObjects_aviao> create(unsigned long id_aviao);
     HANDLE mutex_mensagens, mutex_produtor, semaforo_write, semaforo_read, filemap, mutex_em_andamento;
-    Mensagem_Aviao *sharedMensagemAviao;
+    Mensagem_Aviao_response *sharedMensagemAviao;
 
     ~AviaoSharedObjects_aviao();
 };
@@ -41,7 +41,7 @@ struct AviaoInstance {
     int move(int cur_x, int cur_y, int final_dest_x, int final_dest_y, int *next_x, int *next_y) const;
     int run();
     ~AviaoInstance();
-    std::unique_ptr<Mensagem_Aviao> sendMessage(bool recebeResposta, Mensagem_Control_aviao &mensagemControl);
+    std::unique_ptr<Mensagem_Aviao_response> sendMessage(bool recebeResposta, Mensagem_Aviao_request &mensagemControl);
     void suicidio();
 };
 

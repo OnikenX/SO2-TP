@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 20)
 # true unicode utf_8
 #add_compile_definitions("UTF8_UNICODE")
 #deifine for esperimental pings
-add_compile_definitions("PINGS")
+#add_compile_definitions("PINGS")
 # define especial para debugging
 if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
     add_compile_definitions("_DEBUG")
@@ -29,14 +29,14 @@ set(utils src/utils.cpp)
 set(control_core src/control/control.cpp
         src/control/startup.cpp)
 set(control_menu src/control/menu.cpp )
-set(control_gui src/control/ControlerGrafico.cpp)
+set(control_gui src/control/gui/ControlerGrafico.cpp)
 set(shared_control_aviao src/shared_control_aviao.cpp)
 set(control_shared_components ${shared_control_aviao} ${utils} ${control_core}
         src/shared_control_aviao.cpp src/shared_control_passageiro.cpp src/control/pipeserver.cpp)
 #executaveis do control
 add_executable(SO2-TP-control src/control/main.cpp  ${control_menu}  ${control_shared_components})
 add_executable(SO2-TP-control-GUI ${control_shared_components} ${control_gui})
-target_sources(SO2-TP-control-GUI PRIVATE src/control/control.rc src/control/arrow.cur src/control/control.ico src/control/small.ico)
+target_sources(SO2-TP-control-GUI PRIVATE src/control/gui/control.rc src/control/gui/arrow.cur src/control/gui/control.ico src/control/gui/small.ico)
 #set_property(TARGET SO2-TP-control-GUI PROPERTY WIN32_EXECUTABLE)
 
 #cenas do aviao

@@ -145,8 +145,8 @@ std::optional<AviaoSharedObjects_control> AviaoSharedObjects_control::create(uns
     if (!filemap)
         return std::nullopt;
     auto sharedMensagemAviao =
-            (Mensagem_Aviao *) MapViewOfFile(filemap, FILE_MAP_ALL_ACCESS,
-                                             0, 0, sizeof(Mensagem_Aviao));
+            (Mensagem_Aviao_response *) MapViewOfFile(filemap, FILE_MAP_ALL_ACCESS,
+                                                      0, 0, sizeof(Mensagem_Aviao_response));
     if (!sharedMensagemAviao) {
         CloseHandle(filemap);
         return std::nullopt;
@@ -181,7 +181,7 @@ std::optional<AviaoSharedObjects_control> AviaoSharedObjects_control::create(uns
 }
 
 AviaoSharedObjects_control::AviaoSharedObjects_control(HANDLE mutex, HANDLE semaforo_write, HANDLE semaforo_read,
-                                                       HANDLE filemap, Mensagem_Aviao *sharedMensagemAviao)
+                                                       HANDLE filemap, Mensagem_Aviao_response *sharedMensagemAviao)
         : mutex(mutex), semaforo_write(semaforo_write), semaforo_read(semaforo_read),
           filemap(filemap), sharedMensagemAviao(sharedMensagemAviao), deleted(false) {}
 

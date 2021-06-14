@@ -8,7 +8,7 @@
 #include "../shared_control_aviao.hpp"
 #include "../shared_control_passageiro.hpp"
 
-#include "resource.h"
+#include "control/gui/resource.h"
 
 //argumentos graphiocs
 
@@ -19,7 +19,7 @@ struct Control;
 //strutura de assistencia
 struct AviaoSharedObjects_control {
     AviaoSharedObjects_control(HANDLE mutex, HANDLE semaforo_write, HANDLE semaforo_read, HANDLE filemap,
-                               Mensagem_Aviao *sharedMensagemAviao);
+                               Mensagem_Aviao_response *sharedMensagemAviao);
 
     AviaoSharedObjects_control(AviaoSharedObjects_control &&aviaoSharedObjectsControl) noexcept;
 
@@ -30,7 +30,7 @@ struct AviaoSharedObjects_control {
     AviaoSharedObjects_control(const AviaoSharedObjects_control &) = default; // non construction-copyable
     AviaoSharedObjects_control &operator=(const AviaoSharedObjects_control &) = delete; // non copyable
     HANDLE mutex, semaforo_write, semaforo_read, filemap;
-    Mensagem_Aviao *sharedMensagemAviao;
+    Mensagem_Aviao_response *sharedMensagemAviao;
 
     ~AviaoSharedObjects_control();
 
@@ -118,9 +118,9 @@ struct Control {
     void liberta_o_jack();
 
     //verifica se existe um aviaoInfo na mesma localizaao
-    bool existeAlguem(Mensagem_Control_aviao &mensagemControl);
+    bool existeAlguem(Mensagem_Aviao_request &mensagemControl);
 
-    bool verificaAeroporto_e_atualizaSeAviao(Mensagem_Control_aviao &mensagemControl, Mensagem_Aviao *mensagemAviao);
+    bool verificaAeroporto_e_atualizaSeAviao(Mensagem_Aviao_request &mensagemControl, Mensagem_Aviao_response *mensagemAviao);
 
     Control(DWORD max_avioes, DWORD max_aeroportos, HANDLE shared_memory_handle,
             SharedMemoryMap_control *view_of_file_pointer, CRITICAL_SECTION critical_section_interno);

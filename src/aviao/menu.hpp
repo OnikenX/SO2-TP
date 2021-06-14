@@ -15,4 +15,5 @@ private:
     void novas_cords();
     void inicia_voo();
     void suicidio();
+    void embarcar_passageiros();
 };
