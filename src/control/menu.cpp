@@ -3,6 +3,16 @@
 
 Menu::Menu(Control &control) : control(control), counter_aeroporto(0) {}
 
+void mostrar_passageiros(Menu &menu) {
+    auto guard = CriticalSectionGuard(menu.control.critical_section_interno);
+    tcout << t("Passageiros a espera de embordar: ") << menu.control.passageiros.size() << std::endl;
+    tcout << t("Passageiros por aviao:");
+    for (const auto &aviao : menu.control.avioes)
+        tcout << t("\n\taviao ") << aviao.IDAv << t(": ") << aviao.passageiros_abordo.size();
+    tcout << std::endl;
+
+}
+
 void Menu::run() {
     bool exit = false;
     int input = -1;
@@ -55,7 +65,7 @@ void Menu::run() {
                 consultar_aviao();
                 break;
             case 4:
-                tcout << t("Essa opção está indesponivel, compre a nova versão para desbloquear\n");
+                mostrar_passageiros(*this);
                 break;
             case 5:
                 desativa_novos_avioes();
@@ -76,7 +86,7 @@ bool verificaMaxAeroportos(Menu *isto) {
     return true;
 }
 
-void verificaAeroporto(Aeroporto& a, Control& control, bool& exit_loop){
+void verificaAeroporto(Aeroporto &a, Control &control, bool &exit_loop) {
     auto guard = CriticalSectionGuard(control.critical_section_interno);
     auto existe = std::find_if(std::begin(control.aeroportos), std::end(control.aeroportos),
                                [&](Aeroporto tmp) { return !_tcscmp(tmp.nome, a.nome); });
@@ -166,9 +176,10 @@ void Menu::consultar_aviao() {
     tcout << t("#############################################################################") << std::endl;
 }
 
-void Menu::desativa_novos_avioes() {
+bool Menu::desativa_novos_avioes() {
     auto guard = CriticalSectionGuard(control.critical_section_interno);
     this->control.aceita_avioes = !this->control.aceita_avioes;
+    return true;
 }
 
 

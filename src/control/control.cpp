@@ -120,14 +120,14 @@ namespace tratadores_de_mensagens {
             if (aviaoResponse.resposta_type == Mensagem_Aviao_response_type::lol_ok) {
                 aviao->PosDest = aviaoResponse.msg_content.respostaNovasCoordenadas;
                 tmp_passg.splice(tmp_passg.end(), aviao->passageiros_abordo,
-                                     aviao->passageiros_abordo.begin(), aviao->passageiros_abordo.end());
+                                 aviao->passageiros_abordo.begin(), aviao->passageiros_abordo.end());
             }
         }
         sendMessage(*coms, aviaoResponse);
 #ifdef _DEBUG
         tcerr << t("[DEBUG]: A esvaziar os passageiros.\n");
 #endif
-        for(auto& passageiro : tmp_passg){
+        for (auto &passageiro : tmp_passg) {
             Mensagem_Passageiro_response passageiroResponse{};
             passageiroResponse.resposta_type = Mensagem_passageiro_response_type::desembarcado;
             SendMessagePipe(passageiro.pipe, passageiroResponse);
@@ -219,7 +219,7 @@ namespace tratadores_de_mensagens {
 
         }
         sendMessage(*coms, aviaoResponse);
-        for(auto& passageiro : tmp_passg){
+        for (auto &passageiro : tmp_passg) {
             Mensagem_Passageiro_response passageiroResponse{};
             passageiroResponse.resposta_type = Mensagem_passageiro_response_type::desembarcado_no_destino;
             SendMessagePipe(passageiro.pipe, passageiroResponse);
@@ -289,15 +289,21 @@ namespace tratadores_de_mensagens {
             }
         }
 
-        void meter_passageiros_no_aviao(Control &control, std::list<Passageiro> &tmp_passg, unsigned long id_aviao) {
+
+       bool meter_passageiros_no_aviao(Control &control, std::list<Passageiro> &tmp_passg, unsigned long id_aviao, int & npassageiros, AviaoSharedObjects_control ** coms) {
             auto guard = CriticalSectionGuard(control.critical_section_interno);
             auto aviao = std::find_if(control.avioes.begin(), control.avioes.end(),
                                       [&](auto &aviao) { return aviao.IDAv == id_aviao; });
             if (aviao == control.avioes.end()) {
                 control.passageiros.splice(control.passageiros.end(), tmp_passg, tmp_passg.begin(), tmp_passg.end());
+                *coms = nullptr;
+                return false;
             } else {
-                aviao->passageiros_abordo.splice(control.passageiros.end(), tmp_passg, tmp_passg.begin(),
+                aviao->passageiros_abordo.splice(aviao->passageiros_abordo.end(), tmp_passg, tmp_passg.begin(),
                                                  tmp_passg.end());
+                aviao->update_time();
+                *coms = &aviao->coms;
+                return true;
             }
         }
     }
@@ -306,14 +312,18 @@ namespace tratadores_de_mensagens {
         std::list<Passageiro> tmp_passg;
         auto posA = aviaoRequest.mensagem.info_aeroportos.aviaoInfo.PosA;
         auto posDest = aviaoRequest.mensagem.info_aeroportos.aviaoInfo.PosDest;
+        Mensagem_Aviao_response aviaoResponse{};
         if (posA.isEqual(posDest)) {
-            Mensagem_Aviao_response aviaoResponse{};
             aviaoResponse.resposta_type = Mensagem_Aviao_response_type::movimento_fail;
             find_and_sendMessage(control, aviaoRequest.id_aviao, aviaoResponse);
         } else {
+            aviaoResponse.resposta_type = Mensagem_Aviao_response_type::lol_ok;
             embarcacao_funcs::adiciona_lista(control, tmp_passg, posA, posDest);
             embarcacao_funcs::avisa_passageiros(control, tmp_passg);
-
+            int passageiros = 0;
+            AviaoSharedObjects_control * coms = nullptr;
+            if(embarcacao_funcs::meter_passageiros_no_aviao(control, tmp_passg, aviaoRequest.id_aviao, passageiros, &coms))
+                sendMessage(*coms,  aviaoResponse);
         }
     }
 

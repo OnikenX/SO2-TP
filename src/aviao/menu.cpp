@@ -42,18 +42,13 @@ void Menu::run() {
         }
         tcout << t("Input: ") << input << std::endl;
         switch (input) {
-
             case 9:
                 suicidio();
                 exit = true;
                 break;
-
             case 1:
-
                 novo_destino();
                 break;
-
-
             case 2: {
                 inicia_voo();
                 WaitForSingleObject(this->aviaoInstance.sharedComs->mutex_em_andamento, INFINITE);
@@ -61,15 +56,11 @@ void Menu::run() {
                     exit = true;
                 ReleaseMutex(this->aviaoInstance.sharedComs->mutex_em_andamento);
                 break;
-
             }
-
-
             case 3: {
                 embarcar_passageiros();
+                break;
             }
-
-
             default:
                 tcout << t("Essa opção quase que existe, não queres tentar algo que seja possivel?\n");
         }
@@ -172,5 +163,11 @@ void Menu::embarcar_passageiros() const {
     aviaoRequest.mensagem.info_aeroportos.aviaoInfo = aviaoInstance.aviaoInfo;
     aviaoRequest.id_aviao = aviaoInstance.aviaoInfo.IDAv;
     auto received = aviaoInstance.sendMessage(true, aviaoRequest);
-    received->msg_content.passageiros_embarcados = aviaoInstance.embarcados;
+    if(received->resposta_type == Mensagem_Aviao_response_type::lol_ok){
+        received->msg_content.passageiros_embarcados = aviaoInstance.embarcados;
+        tcout << t("Foram embarcados ") << aviaoInstance.embarcados << t(" pessoinhas.\n");
+    }else{
+        tcout << t("nao podes embarcar pessaos se estiveres no mesmo sitio. :/\n");
+    }
+
 }
