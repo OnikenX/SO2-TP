@@ -190,7 +190,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                     DialogBox(hInst, MAKEINTRESOURCE(IDD_LB_Avioes), hWnd, ListaAvioes);
                     break;
                 case IDM_Consulta_Passageiros:
-                    DialogBox(hInst, MAKEINTRESOURCE(IDD_LB_Passageiros), hWnd, ListaAvioes);
+                    DialogBox(hInst, MAKEINTRESOURCE(IDD_LB_Passageiros), hWnd, ListaPassageiros);
                     break;
                 case IDM_NO_PLANES:
                     if (!menu->desativa_novos_avioes()) {
